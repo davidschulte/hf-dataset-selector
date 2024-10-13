@@ -8,14 +8,13 @@ import time
 from datetime import datetime
 import json
 from dataset_parsing import dataset_info_dict
-from config import TASKEMB_EMBEDDINGS_DIR, TASKEMB_EVAL_DIR, TARGET_TASKS
+from config import TASKEMB_EMBEDDINGS_DIR, TASKEMB_EVAL_DIR, TARGET_TASKS, NUM_SOURCE_SAMPLES, NUM_TARGET_SAMPLES
 
 
-num_source_samples = 10000
-num_target_samples = 1000
 use_only_cls = False
 
 source_names = dataset_info_dict.keys()
+
 
 def compute_cosine_distances(target_embeddings_dir, source_embeddings_dirs, use_only_cls=False):
     if isinstance(source_embeddings_dirs, str):
@@ -67,11 +66,11 @@ if __name__ == '__main__':
 
         target_embeddings_dir = get_output_path(TASKEMB_EMBEDDINGS_DIR,
                                                 target_name=target_dataset_name,
-                                                num_train_samples=num_target_samples)
+                                                num_train_samples=NUM_TARGET_SAMPLES)
 
         source_embeddings_dirs = [get_output_path(TASKEMB_EMBEDDINGS_DIR,
                                                 target_name=source_name,
-                                                num_train_samples=num_source_samples)
+                                                num_train_samples=NUM_SOURCE_SAMPLES)
                                   for source_name in source_names]
 
         target_distances = compute_cosine_distances(target_embeddings_dir,
@@ -83,8 +82,8 @@ if __name__ == '__main__':
         time_elapsed = time.time() - start_time
 
         target_output_path = get_output_path(TASKEMB_EVAL_DIR,
-                                             num_train_samples=num_target_samples,
-                                             num_source_samples=num_source_samples,
+                                             num_train_samples=NUM_TARGET_SAMPLES,
+                                             num_source_samples=NUM_SOURCE_SAMPLES,
                                              target_name=target_dataset_name)
 
         for source_name, result in zip(source_names, target_results):

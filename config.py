@@ -4,6 +4,10 @@ import torch
 import numpy as np
 # os.environ["TORCH_CUDA_ARCH_LIST"] = "8.6"
 
+NUM_SOURCE_SAMPLES = 10000
+NUM_TARGET_SAMPLES = 1000
+NUM_VAL_SAMPLES = 1000
+
 CLASSIFICATION_TARGETS_TASKS = [
     'imdb_plain_text',
     'tweet_eval_emotion',

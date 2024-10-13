@@ -11,7 +11,8 @@ import json
 from tqdm import tqdm
 import torch
 from dataset_parsing import dataset_info_dict
-from config import TEXTEMB_EVAL_DIR, TEXTEMB_EMBEDDINGS_DIR, GPU_DEVICE, TARGET_TASKS
+from config import TEXTEMB_EVAL_DIR, TEXTEMB_EMBEDDINGS_DIR, GPU_DEVICE, TARGET_TASKS, NUM_SOURCE_SAMPLES, \
+    NUM_TARGET_SAMPLES
 
 
 def similarity_score(x, y):
@@ -20,9 +21,6 @@ def similarity_score(x, y):
 
 source_datasets = dataset_info_dict.keys()
 
-num_source_samples = 10000
-num_target_samples = 1000
-
 overwrite_embeddings = False
 stream_sources = True
 
@@ -30,7 +28,7 @@ embeddings_dict = {}
 
 successful_sources = []
 
-for datasets_list, num_train_samples in ((TARGET_TASKS, num_target_samples), (source_datasets, num_source_samples)):
+for datasets_list, num_train_samples in ((TARGET_TASKS, NUM_TARGET_SAMPLES), (source_datasets, NUM_SOURCE_SAMPLES)):
     for dataset_name in tqdm(datasets_list):
         try:
             output_dir = get_output_path(TEXTEMB_EMBEDDINGS_DIR,
@@ -85,10 +83,10 @@ for target_dataset_name in TARGET_TASKS:
     target_results = {}
 
     start_time = time.time()
-    target_embedding_name = f'{target_dataset_name}_{num_target_samples}'
+    target_embedding_name = f'{target_dataset_name}_{NUM_TARGET_SAMPLES}'
     target_vector = embeddings_dict[target_embedding_name]
     for source_dataset_name in source_datasets:
-        source_embedding_name = f'{source_dataset_name}_{num_source_samples}'
+        source_embedding_name = f'{source_dataset_name}_{NUM_SOURCE_SAMPLES}'
         source_vector = embeddings_dict[source_embedding_name]
         similarity = similarity_score(target_vector, source_vector)
         target_results[source_dataset_name] = similarity
@@ -97,8 +95,8 @@ for target_dataset_name in TARGET_TASKS:
     time_elapsed = time.time() - start_time
 
     target_output_path = get_output_path(TEXTEMB_EVAL_DIR,
-                                         num_train_samples=num_target_samples,
-                                         num_source_samples=num_source_samples,
+                                         num_train_samples=NUM_TARGET_SAMPLES,
+                                         num_source_samples=NUM_SOURCE_SAMPLES,
                                          target_name=target_dataset_name)
 
     for source_dataset_name in source_datasets:
