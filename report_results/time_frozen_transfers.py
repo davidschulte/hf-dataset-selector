@@ -1,4 +1,4 @@
-from transfer_learning import execute_transfers
+from transfer_learning.transfer_learning import execute_transfers
 from dataset_parsing import dataset_info_dict
 import os
 import pickle

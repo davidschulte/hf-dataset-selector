@@ -9,7 +9,7 @@ class EmbeddingDataset(Dataset):
         self.x = np.loadtxt(os.path.join(filepath, 'standard_embeddings.csv'))
         self.y = np.loadtxt(os.path.join(filepath, 'trained_embeddings.csv'))
 
-        assert len(x) == len(y)
+        assert len(self.x) == len(self.y)
 
         self.num_rows = len(self.x)
 

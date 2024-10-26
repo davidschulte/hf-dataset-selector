@@ -58,7 +58,7 @@ def rank_sources(target_distances):
     return fused_rankings
 
 
-if __name__ == '__main__':
+def main():
     for target_dataset_name in tqdm(TARGET_TASKS):
         start_time = time.time()
 
@@ -101,3 +101,6 @@ if __name__ == '__main__':
         with open(os.path.join(target_output_path, 'timer.json'), 'w') as f:
             json.dump(timer_dict, f)
 
+
+if __name__ == '__main__':
+    main()

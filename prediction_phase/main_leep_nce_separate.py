@@ -7,7 +7,7 @@ from utils.model_utils import load_sequence_classification_model_from_dir
 from config import MODELS_SOURCES_DIR, LEEP_DIR, NCE_DIR, CLASSIFICATION_TARGETS_TASKS, NUM_SOURCE_SAMPLES, \
     NUM_TARGET_SAMPLES
 from hfdataset import HFDataset
-from compute_leep_and_nce import compute_leep, compute_nce
+from preparation_phase.compute_leep_and_nce import compute_leep, compute_nce
 from tqdm import tqdm
 import json
 from dataset_parsing import dataset_info_dict

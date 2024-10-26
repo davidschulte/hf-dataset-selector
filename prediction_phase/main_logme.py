@@ -1,4 +1,4 @@
-from compute_logme import compute_logme_from_list
+from preparation_phase.compute_logme import compute_logme_from_list
 from dataset_parsing import dataset_info_dict
 from config import TARGET_TASKS, NUM_SOURCE_SAMPLES, NUM_TARGET_SAMPLES
 

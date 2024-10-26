@@ -1,5 +1,5 @@
 from torch.utils.data import SequentialSampler, DataLoader
-from utils.LogME import LogME
+from prediction_phase.LogME import LogME
 import numpy as np
 import torch
 from utils.model_utils import get_pooled_output, EMBEDDING_SIZE

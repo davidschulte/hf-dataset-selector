@@ -1,4 +1,4 @@
-from transfer_learning import train_model_from_dataset
+from transfer_learning.transfer_learning import train_model_from_dataset
 from compute_embeddings import compute_embeddings_source_model
 from train_esm import train_transformation_network_source_embeddings
 from dataset_parsing import dataset_info_dict

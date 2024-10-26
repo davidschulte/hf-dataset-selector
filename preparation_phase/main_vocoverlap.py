@@ -1,6 +1,6 @@
 import pickle
 
-from compute_vocabulary_overlap import get_vocabulary_set, compute_jaccard_index
+from preparation_phase.compute_vocabulary_overlap import get_vocabulary_set, compute_jaccard_index
 from hfdataset import HFDataset
 from dataset_parsing import dataset_info_dict
 from utils.path_utils import get_output_path

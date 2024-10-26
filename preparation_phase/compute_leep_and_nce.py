@@ -1,7 +1,7 @@
 from torch.utils.data import SequentialSampler, DataLoader
 from evaluators import TransformerEvaluator
-from utils.LEEP import LEEP
-from utils.NCE import NCE
+from prediction_phase.LEEP import LEEP
+from prediction_phase.NCE import NCE
 from hfdataset import HFDataset
 import numpy as np
 
