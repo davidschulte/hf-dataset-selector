@@ -5,7 +5,7 @@ with open("README.md", "r") as f:
 
 setup(
     name="hf-dataset-selector",
-    version="0.0.2",
+    version="0.1.0",
     description="",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
@@ -21,11 +21,11 @@ setup(
         "Operating System :: OS Independent",
     ],
     install_requires=[
-        "bson >= 0.5.10"
+        "bson >= 0.5.10",
         "auto_mix_prep == 0.2.0",
         "datasets == 3.0.2",
         "huggingface_hub == 0.26.1",
-        "numba == 0.57.1"
+        "numba == 0.57.1",
         "numpy == 1.24.3",
         "torch == 2.1.2",
         "tqdm == 4.66.5",
