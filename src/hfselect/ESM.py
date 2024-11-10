@@ -1,9 +1,11 @@
 import torch
 import torch.nn as nn
 import numpy as np
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Union
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download, HfApi, create_repo, ModelCard, ModelCardData
 from tqdm import tqdm
+import os
+from .ESMConfig import ESMConfig
 # from . import hf_api
 
 
@@ -12,10 +14,9 @@ class ESM(nn.Module, PyTorchModelHubMixin):
     def __init__(
             self,
             embedding_dim: int = 768,
-            base_model_name: Optional[str] = None,
-            task_id: Optional[str] = None,
             optional_layer_dims: Optional[List[int]] = None,
-            metadata: Dict[str, str] = None):
+            config: Union[ESMConfig, Dict[str, Union[float, int, str]]] = None
+    ):
         super(ESM, self).__init__()
         if isinstance(optional_layer_dims, int):
             optional_layer_dims = [optional_layer_dims]
@@ -41,31 +42,35 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         self.bottleneck_dim = np.min(self.layer_dims)
         self.sequential = nn.Sequential(*layers)
 
-        self.base_model_name = "" if base_model_name is None else base_model_name
-        self.task_id = "" if task_id is None else task_id
-        self.metadata = metadata
+        self.config = config
 
     def publish(
             self,
             repo_id: str,
-            developers: Optional[str] = None
+            config: Optional[Union[ESMConfig, Dict[str, Union[float, int, str]]]] = None
     ) -> None:
         create_repo(repo_id=repo_id, exist_ok=True)
-        self.push_to_hub(repo_id=repo_id)
 
-        card_data = ModelCardData(language='en', license='mit', library_name='keras',
-                                  tags=["embedding_space_map", f"BaseLM:{self.base_model_name}"])
+        if config is None:
+            config = self.config
 
-        model_card_kwargs = {}
-        if developers:
-            model_card_kwargs["developers"] = developers
+        assert config.is_valid
+
+        self.push_to_hub(repo_id=repo_id)#, config=config)
+        config.push_to_hub(repo_id=repo_id)
+
+        card_data = ModelCardData(license='apache-2.0',
+                                  datasets=[config.task_id],
+                                  base_model=config.base_model_name,
+                                  tags=["embedding_space_map", f"BaseLM:{config.base_model_name}"])
 
         card = ModelCard.from_template(
             card_data,
-            model_id=self.task_id,
+            template_path=os.path.join(os.path.dirname(__file__), "modelcard_template.md"),
+            model_id=config.task_id,
             model_description="ESM",
-            datasets=[self.task_id],
-            **model_card_kwargs
+            # datasets=[self.task_id],
+            **config.to_dict()
         )
         card.push_to_hub(repo_id)
 
@@ -81,7 +86,6 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         embedding_dim = state_dict['sequential.0.weight'].shape[1]
 
         esm = ESM(embedding_dim=embedding_dim)
-        esm.tags = ["embeddings_space_map_test"]
         esm.load_state_dict(state_dict)
 
         return esm
@@ -92,7 +96,6 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         esm.repo_id = repo_id
 
         return esm
-
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         return self.sequential(x)

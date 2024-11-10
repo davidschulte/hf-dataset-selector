@@ -1,11 +1,11 @@
 from setuptools import find_packages, setup
 
-with open("src/README.md", "r") as f:
+with open("src/hfselect/README.md", "r") as f:
     long_description = f.read()
 
 setup(
-    name="hfselect",
-    version="0.0.1",
+    name="hf-dataset-selector",
+    version="0.0.2",
     description="",
     package_dir={"": "src"},
     packages=find_packages(where="src"),
