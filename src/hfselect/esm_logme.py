@@ -58,7 +58,7 @@ def compute_task_ranking(
         dataset: Dataset,
         model_name: str,
         # is_regression: bool
-) -> dict[str, float]:
+) -> List[tuple[str, float]]:
     esms = fetch_esms(model_name)
     repo_ids = list(esms.keys())
     esms = list(esms.values())
@@ -73,4 +73,4 @@ def compute_task_ranking(
         esms=esms,
     )
 
-    return {repo_ids[idx]: scores[idx] for idx in np.argsort(scores)[::-1]}
+    return [(esms[idx].config["task_id"], scores[idx]) for idx in np.argsort(scores)[::-1]]
