@@ -15,7 +15,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
             self,
             embedding_dim: int = 768,
             optional_layer_dims: Optional[List[int]] = None,
-            config: Union[ESMConfig, Dict[str, Union[float, int, str]]] = None
+            config: Optional[Union[ESMConfig, Dict[str, Union[float, int, str]]]] = None
     ):
         super(ESM, self).__init__()
         if isinstance(optional_layer_dims, int):

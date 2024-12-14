@@ -121,8 +121,13 @@ class Dataset(TorchDataset):
                 )
 
         metadata = {
+            "task_id": name,
+            "task_subset": subset,
+            "label_column": label_col,
+            "task_split": split,
+            "num_examples": num_examples,
+            "seed": seed,
             "streamed": streaming,
-            "seed": seed
         }
 
         return Dataset(

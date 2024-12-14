@@ -111,7 +111,6 @@ def create_base_model(model_name):
 #                                                                num_labels=num_labels,
 #                                                                **SEQUENCE_CLASSIFICATION_MODEL_ARGS)
 
-
 def create_tokenizer(model_name):
     tokenizer_class: PreTrainedTokenizer = MODELS[model_name]['tokenizer']
     pretrained_name = MODELS[model_name]['pretrained_name']

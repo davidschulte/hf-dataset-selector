@@ -4,7 +4,7 @@ from .dataset import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from torch.utils.data import SequentialSampler, DataLoader
 import os
-from typing import Optional
+from typing import Optional, Union, List
 from tqdm import tqdm
 from .model_utils import get_pooled_output
 import torch
@@ -12,7 +12,17 @@ import torch
 
 class EmbeddingDataset(TorchDataset):
 
-    def __init__(self, x, y):
+    def __init__(
+            self,
+            x: Union[np.array, List[np.array]],
+            y: Union[np.array, List[np.array]],
+            ):
+
+        if isinstance(x, list):
+            x = np.vstack(x)
+        if isinstance(y, list):
+            y = np.vstack(y)
+
         self.x = x
         self.y = y
 
@@ -43,18 +53,20 @@ def create_embedding_dataset(
         output_path: Optional[str] = None,
         batch_size: int = 128,
         overwrite: bool = True
-) -> "EmbeddingDataset":
-    os.makedirs(output_path, exist_ok=True)
-    standard_embeddings_filepath = os.path.join(output_path, f'standard_embeddings.csv')
-    trained_embeddings_filepath = os.path.join(output_path, f'trained_embeddings.csv')
-    if os.path.isfile(standard_embeddings_filepath) and os.path.isfile(
-            trained_embeddings_filepath) and not overwrite:
-        print("Found embeddings.")
-        return EmbeddingDataset.from_disk(output_path)
+) -> EmbeddingDataset:
+    if output_path:
+        standard_embeddings_filepath = os.path.join(output_path, f'standard_embeddings.csv')
+        trained_embeddings_filepath = os.path.join(output_path, f'trained_embeddings.csv')
+        if os.path.isfile(standard_embeddings_filepath) and os.path.isfile(
+                trained_embeddings_filepath) and not overwrite:
+            print("Found embeddings.")
+            return EmbeddingDataset.from_disk(output_path)
 
-    for embedding_filepath in [standard_embeddings_filepath, trained_embeddings_filepath]:
-        if os.path.exists(embedding_filepath):
-            os.remove(embedding_filepath)
+        for embedding_filepath in [standard_embeddings_filepath, trained_embeddings_filepath]:
+            if os.path.exists(embedding_filepath):
+                os.remove(embedding_filepath)
+
+        os.makedirs(output_path, exist_ok=True)
 
     device = torch.device(device_name)
 
@@ -70,20 +82,30 @@ def create_embedding_dataset(
                             sampler=sampler,
                             batch_size=batch_size,
                             collate_fn=lambda x: dataset.collate_fn(x, tokenizer=tokenizer))
+    base_embeddings = []
+    trained_embeddings = []
 
     for step, batch in enumerate(tqdm(dataloader)):
         batch = tuple(t.to(device) for t in batch)
         b_input_ids, b_input_mask, _ = batch
 
         with torch.no_grad():
-            trained_embeddings = get_pooled_output(tuned_model, b_input_ids, b_input_mask).cpu().numpy()
-            standard_embeddings = get_pooled_output(base_model, b_input_ids,
+            base_embeddings_batch = get_pooled_output(base_model, b_input_ids,
                                                     b_input_mask).cpu().numpy()
+            trained_embeddings_batch = get_pooled_output(tuned_model, b_input_ids, b_input_mask).cpu().numpy()
 
-        with open(standard_embeddings_filepath, "ab") as f:
-            np.savetxt(f, standard_embeddings)
+        if output_path:
+            with open(standard_embeddings_filepath, "ab") as f:
+                np.savetxt(f, base_embeddings_batch)
 
-        with open(trained_embeddings_filepath, "ab") as f:
-            np.savetxt(f, trained_embeddings)
+            with open(trained_embeddings_filepath, "ab") as f:
+                np.savetxt(f, trained_embeddings_batch)
 
-    return EmbeddingDataset(standard_embeddings, trained_embeddings)
+        else:
+            base_embeddings.append(base_embeddings_batch)
+            trained_embeddings.append(trained_embeddings_batch)
+
+    if output_path:
+        return EmbeddingDataset.from_disk(output_path)
+
+    return EmbeddingDataset(base_embeddings, trained_embeddings)
