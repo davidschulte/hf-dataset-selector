@@ -2,6 +2,10 @@ from transformers import PretrainedConfig
 from typing import Optional
 
 
+class InvalidESMConfigException(Exception):
+    def __init__(self):
+        self.message = "The Config is not valid ESM Config."
+
 class ESMConfig(PretrainedConfig):
 
     def __init__(
@@ -35,7 +39,7 @@ class ESMConfig(PretrainedConfig):
         self.task_id = task_id
         self.task_subset = task_subset
         self.text_column = text_column
-        self.label_column= label_column
+        self.label_column = label_column
         self.task_split = task_split
         self.num_examples = num_examples
         self.seed = seed
@@ -59,3 +63,14 @@ class ESMConfig(PretrainedConfig):
     def is_valid(self):
         return isinstance(self.base_model_name, str) and self.base_model_name and \
             isinstance(self.task_id, str) and self.task_id
+
+    @classmethod
+    def from_esm(cls, esm: "ESM"):
+        return ESMConfig(**esm.config)
+
+    def __str__(self):
+        return (
+            f"ESMConfig -\tTask ID: {self.task_id} -\tTask Subset: {self.task_id} -\t Task Split: {self.task_split} -\t"
+            f"Text Column: {self.text_column} -\t Label Column: {self.label_column} -\t"
+            f"Num Examples: {self.num_examples}"
+        )

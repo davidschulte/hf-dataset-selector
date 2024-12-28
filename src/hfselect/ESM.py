@@ -2,8 +2,7 @@ import torch
 import torch.nn as nn
 import numpy as np
 from typing import List, Dict, Optional, Union
-from huggingface_hub import PyTorchModelHubMixin, hf_hub_download, HfApi, create_repo, ModelCard, ModelCardData
-from tqdm import tqdm
+from huggingface_hub import PyTorchModelHubMixin, hf_hub_download, create_repo, ModelCard, ModelCardData
 import os
 from .ESMConfig import ESMConfig
 # from . import hf_api
@@ -107,22 +106,8 @@ class ESM(nn.Module, PyTorchModelHubMixin):
     def bottleneck_model(self) -> nn.Sequential:
         return self.sequential[:self.bottleneck_idx]
 
+    def __str__(self):
+        return self.__repr__()
 
-def find_esm_repo_ids(model_name: str) -> List[str]:
-    hf_api = HfApi()
-    model_infos = hf_api.list_models(filter=["embedding_space_map", f"BaseLM:{model_name}"])
-
-    return [model_info.id for model_info in model_infos]
-
-
-def fetch_esms(model_name: str) -> dict[str, "ESM"]:
-    repo_ids = find_esm_repo_ids(model_name=model_name)
-
-    esms = {}
-    for repo_id in tqdm(repo_ids):
-        try:
-            esms[repo_id] = ESM.from_pretrained(repo_id)
-        except Exception as e:
-            pass
-
-    return esms
+    def __repr__(self):
+        return f"ESM - Task ID: {self.config.get('task_id', 'N/A')} - Subset: {self.config.get('task_subset', 'N/A')}"

@@ -4,16 +4,18 @@ import numpy as np
 import torch
 from .model_utils import get_pooled_output
 from transformers import PreTrainedModel, PreTrainedTokenizer
-from .ESM import ESM, fetch_esms
+from .utils import fetch_esms, find_esm_repo_ids
 from .dataset import Dataset
-from tqdm import tqdm
-from typing import List
+from .task_ranking import TaskRanking
+from .ESMConfig import ESMConfig
+from tqdm.auto import tqdm
+from typing import List, Optional
 from transformers import AutoModel, AutoTokenizer
 
 
 def compute_logme_esm_batch(dataset: Dataset,
                             base_model: PreTrainedModel,
-                            esms: List[ESM],
+                            esms: List["ESM"],
                             tokenizer: PreTrainedTokenizer,
                             # regression: bool,
                             batch_size: int = 128,
@@ -33,23 +35,25 @@ def compute_logme_esm_batch(dataset: Dataset,
     labels = np.zeros(0, label_dtype)
     esm_embeddings = [[] for _ in range(len(esms))]
 
-    for batch in tqdm(dataloader):
-        batch = tuple(t.to(device) for t in batch)
-        b_input_ids, b_input_mask, b_labels = batch
-        b_labels = b_labels.detach().cpu().numpy().flatten()
+    with tqdm(dataloader, desc="Computing embeddings", unit="batch") as pbar:
+        for batch in pbar:
+            batch = tuple(t.to(device) for t in batch)
+            b_input_ids, b_input_mask, b_labels = batch
+            b_labels = b_labels.detach().cpu().numpy().flatten()
 
-        with torch.no_grad():
-            batch_base_embeddings = get_pooled_output(base_model, b_input_ids, b_input_mask)
-            for i, transformation_net in enumerate(esms):
-                batch_transformed_embeddings = transformation_net(batch_base_embeddings).cpu().numpy()
-                esm_embeddings[i].append(batch_transformed_embeddings)
+            with torch.no_grad():
+                batch_base_embeddings = get_pooled_output(base_model, b_input_ids, b_input_mask)
+                for i, transformation_net in enumerate(esms):
+                    batch_transformed_embeddings = transformation_net(batch_base_embeddings).cpu().numpy()
+                    esm_embeddings[i].append(batch_transformed_embeddings)
 
-        labels = np.append(labels, b_labels, axis=0)
+            labels = np.append(labels, b_labels, axis=0)
 
     logme_results = []
-    for features in tqdm(esm_embeddings):
-        embeddings = np.vstack(features)
-        logme_results.append(LogME(regression=regression).fit(embeddings, labels, add_intercept=False))
+    with tqdm(esm_embeddings, desc="Computing LogME", unit="Task") as pbar:
+        for features in pbar:
+            embeddings = np.vstack(features)
+            logme_results.append(LogME(regression=regression).fit(embeddings, labels, add_intercept=False))
 
     return logme_results
 
@@ -57,11 +61,17 @@ def compute_logme_esm_batch(dataset: Dataset,
 def compute_task_ranking(
         dataset: Dataset,
         model_name: str,
+        esms: Optional[List["ESM"]] = None,
+        esm_repo_ids: Optional[List[str]] = None,
         # is_regression: bool
-) -> List[tuple[str, float]]:
-    esms = fetch_esms(model_name)
-    repo_ids = list(esms.keys())
-    esms = list(esms.values())
+) -> TaskRanking:
+# ) -> List[tuple[str, float]]:
+
+    if esms is None:
+        if esm_repo_ids is None:
+           esm_repo_ids = find_esm_repo_ids(model_name=model_name)
+
+        esms = fetch_esms(esm_repo_ids)
 
     bert_model = AutoModel.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
@@ -73,4 +83,6 @@ def compute_task_ranking(
         esms=esms,
     )
 
-    return [(esms[idx].config["task_id"], scores[idx]) for idx in np.argsort(scores)[::-1]]
+    return TaskRanking([ESMConfig.from_esm(esm) for esm in esms], scores)
+
+    # return [(esms[idx].config["task_id"], scores[idx]) for idx in np.argsort(scores)[::-1]]
