@@ -40,7 +40,7 @@ class TaskRanking(Sequence):
         return "\n".join(self._format_for_output())
 
     def __str__(self):
-        return "\n".join(self[:10]._format_for_output(score_rounding=6)) + "\n..." if len(self) > 10 else ""
+        return "\n".join(self[:10]._format_for_output(score_rounding=6)) + ("\n..." if len(self) > 10 else "")
 
     def _format_for_output(self, score_rounding: Optional[int] = None):
         output_lines = []
