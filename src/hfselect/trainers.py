@@ -13,7 +13,7 @@ import time
 import json
 from tqdm import tqdm
 from datetime import datetime
-from torch.utils.data import SequentialSampler, DataLoader
+from torch.utils.data import RandomSampler, DataLoader
 from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
 from .dataset import Dataset
 
@@ -134,7 +134,7 @@ class ESMTrainer(Trainer):
                 print('Found transformation network on disk.')
                 return ESM.from_pretrained(output_filepath)
 
-        sampler = SequentialSampler(embeddings_dataset)
+        sampler = RandomSampler(embeddings_dataset)
         dataloader = DataLoader(embeddings_dataset, sampler=sampler, batch_size=batch_size)
 
         num_train_steps = len(dataloader) * num_epochs
