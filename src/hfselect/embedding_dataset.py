@@ -31,11 +31,11 @@ class EmbeddingDataset(TorchDataset):
         if isinstance(y, list):
             y = np.vstack(y)
 
-        self.x = x
-        self.y = y
-
         if len(x) != len(y):
             raise InvalidEmbeddingDatasetError(len(x), len(y))
+
+        self.x = x
+        self.y = y
 
         self.num_rows = len(self.x)
 
