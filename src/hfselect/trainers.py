@@ -6,7 +6,6 @@ import torch
 from torch import nn
 from torch.nn import MSELoss
 from torch.optim import AdamW
-# from src.hfselect.model_utils import create_sequence_classification_model, get_base_model
 import os
 from typing import Optional, List, Tuple
 import time

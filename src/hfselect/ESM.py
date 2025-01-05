@@ -1,4 +1,5 @@
 import torch
+from safetensors.torch import load_file
 import torch.nn as nn
 import numpy as np
 from typing import List, Dict, Optional, Union
@@ -81,8 +82,8 @@ class ESM(nn.Module, PyTorchModelHubMixin):
             device_name: str = "cpu",
     ) -> "ESM":
 
-        device = torch.device(device_name)
-        state_dict = torch.load(filepath, map_location=device)
+        # device = torch.device(device_name)
+        state_dict = load_file(filepath)
         embedding_dim = state_dict['sequential.0.weight'].shape[1]
 
         esm = ESM(embedding_dim=embedding_dim)
