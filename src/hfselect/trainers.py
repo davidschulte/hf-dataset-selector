@@ -25,24 +25,19 @@ class Trainer:
             optimizer: Optional["torch.optim.Optimizer"] = None,
             learning_rate: float = 0.001,
             weight_decay: float = 0.01,
-            scheduler: Optional["torch.optim.lr_scheduler.LRScheduler"] = None,
             device: str = "cpu"
     ):
-        # self.output_dim = output_dim
         self.model = self._create_model() if model is None else model
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.optimizer = self._create_optimizer(self.model, weight_decay, learning_rate=learning_rate)\
-            if optimizer is None else optimizer
-        # self.scheduler = self._create_scheduler(self.optimizer, num_train_steps=num_train_steps) if scheduler is None \
-        #     else scheduler
-        self.scheduler = scheduler
+        self.optimizer = optimizer or self._create_optimizer(self.model, weight_decay, learning_rate=learning_rate)
+        self.scheduler = None
 
         if device != "cpu" and torch.cuda.is_available():
             self.device = torch.device(device) if torch.cuda.is_available() else torch.device("cpu")
         else:
             self.device = "cpu"
-        # print(self.device)
+
         self.model.to(self.device)
 
         self.total_loss = 0
@@ -74,60 +69,12 @@ class Trainer:
                                                num_training_steps=num_train_steps)
 
     def reset_loss(self):
-        # print(f'Loss: {self.total_loss}')
         self.total_loss = 0
         self.num_train_examples = 0
 
     @property
     def avg_loss(self):
         return self.total_loss / self.num_train_examples
-
-
-# class TransformerTrainer(Trainer):
-#
-#     def __init__(self, output_dim, model=None, optimizer=None, weight_decay=0.01, scheduler=None,
-#                  freeze_base_model=False, device="cpu"):
-#         super(TransformerTrainer, self).__init__(model=model,
-#                                                  optimizer=optimizer,
-#                                                  weight_decay=weight_decay,
-#                                                  scheduler=scheduler,
-#                                                  learning_rate=2e-5,
-#                                                  device=device)
-#
-#         self.output_dim = output_dim
-#
-#         self.freeze_base_model = freeze_base_model
-#
-#         # if self.freeze_base_model:
-#         #     base_model = get_base_model(self.model)
-#         #     for param in base_model.parameters():
-#         #         param.requires_grad = False
-#
-#     def train_step(self, batch):
-#         batch = tuple(b.to(self.device) for b in batch)
-#         b_input_ids, b_input_mask, b_labels = batch
-#
-#         self.model.train()
-#         self.model.zero_grad()
-#
-#         outputs = self.model(b_input_ids,
-#                              # token_type_ids=None,
-#                              attention_mask=b_input_mask,
-#                              labels=b_labels)
-#         loss = outputs[0]
-#         self.total_loss += loss.item()
-#         self.num_train_examples += len(b_input_ids)
-#
-#         loss.backward()
-#         torch.nn.utils.clip_grad_norm_(self.model.parameters(), 1.0)
-#
-#         self.optimizer.step()
-#         self.scheduler.step()
-#
-#         return loss.item()
-#
-#     def _create_model(self):
-#         return create_sequence_classification_model(num_labels=self.output_dim)
 
 
 class ESMTrainer(Trainer):
@@ -138,7 +85,6 @@ class ESMTrainer(Trainer):
             optimizer: Optional["torch.optim.Optimizer"] = None,
             weight_decay: float = 0.01,
             learning_rate: float = 0.001,
-            scheduler: Optional["torch.optim.lr_scheduler.LRScheduler"] = None,
             device: str = "cpu"
     ):
 
@@ -148,7 +94,6 @@ class ESMTrainer(Trainer):
             model=model,
             optimizer=optimizer,
             weight_decay=weight_decay,
-            scheduler=scheduler,
             learning_rate=learning_rate,
             device=device
         )
@@ -166,7 +111,6 @@ class ESMTrainer(Trainer):
 
         self.model.zero_grad()
         outputs = self.model(b_standard_embeddings.float())
-        # loss = self.loss_fct(outputs, b_labels.float())
         loss = self.loss_fct(outputs, b_transferred_embeddings.float())
         self.total_loss += loss.item()
         self.num_train_examples += len(b_standard_embeddings)
@@ -195,9 +139,7 @@ class ESMTrainer(Trainer):
 
         num_train_steps = len(dataloader) * num_epochs
 
-        # TODO: Check scheduler if scheduler should always be overwritten
-        if self.scheduler is None:
-            self.scheduler = self._create_scheduler(optimizer=self.optimizer, num_train_steps=num_train_steps)
+        self.scheduler = self._create_scheduler(optimizer=self.optimizer, num_train_steps=num_train_steps)
 
         epoch_train_durations = []
         epoch_avg_losses = []
