@@ -2,9 +2,12 @@ from transformers import PretrainedConfig
 from typing import Optional
 
 
-class InvalidESMConfigException(Exception):
-    def __init__(self):
-        self.message = "The Config is not valid ESM Config."
+class InvalidESMConfigError(Exception):
+    default_message = "The Config is not valid ESM Config."
+
+    def __init__(self, message: Optional[str] = None):
+        super().__init__(message or self.default_message)
+
 
 class ESMConfig(PretrainedConfig):
 
@@ -57,7 +60,6 @@ class ESMConfig(PretrainedConfig):
         self.esm_optimizer = esm_optimizer
         self.developers = developers
 
-        # assert self.is_valid
 
     @property
     def is_valid(self):

@@ -4,7 +4,7 @@ from collections import defaultdict
 from typing import Union
 import warnings
 from .ESM import ESM
-from .ESMConfig import ESMConfig, InvalidESMConfigException
+from .ESMConfig import ESMConfig, InvalidESMConfigError
 
 
 def find_esm_repo_ids(model_name: str) -> list[str]:
@@ -26,7 +26,7 @@ def fetch_esms(
                 esm = ESM.from_pretrained(repo_id)
 
                 if not ESMConfig.from_esm(esm).is_valid:
-                    raise InvalidESMConfigException
+                    raise InvalidESMConfigError
 
                 esms.append(esm)
 
@@ -56,7 +56,7 @@ def fetch_esm_configs(
                 esm_config = ESMConfig.from_pretrained(repo_id)
 
                 if not esm_config.is_valid:
-                    raise InvalidESMConfigException
+                    raise InvalidESMConfigError
 
                 esm_configs.append(esm_config)
             except Exception as e:

@@ -10,6 +10,14 @@ from .model_utils import get_pooled_output
 import torch
 
 
+class InvalidEmbeddingDatasetError(Exception):
+
+    def __init__(self, len_x: int, len_y: int):
+        super().__init__(f"Number of base and transformed embeddings does not match: {len_x} != {len_y}.")
+        self.len_x = len_x
+        self.len_y = len_y
+
+
 class EmbeddingDataset(TorchDataset):
 
     def __init__(
@@ -26,7 +34,8 @@ class EmbeddingDataset(TorchDataset):
         self.x = x
         self.y = y
 
-        assert len(x) == len(y)
+        if len(x) != len(y):
+            raise InvalidEmbeddingDatasetError(len(x), len(y))
 
         self.num_rows = len(self.x)
 

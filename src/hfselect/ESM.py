@@ -4,7 +4,7 @@ import numpy as np
 from typing import List, Dict, Optional, Union
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download, create_repo, ModelCard, ModelCardData
 import os
-from .ESMConfig import ESMConfig
+from .ESMConfig import ESMConfig, InvalidESMConfigError
 # from . import hf_api
 
 
@@ -53,7 +53,8 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         if config is None:
             config = self.config
 
-        assert config.is_valid
+        if not config.is_valid:
+            raise InvalidESMConfigError()
 
         self.push_to_hub(repo_id=repo_id)#, config=config)
         config.push_to_hub(repo_id=repo_id)
