@@ -3,6 +3,13 @@ import numpy as np
 from collections.abc import Sequence
 
 
+class InvalidTaskRankingError(Exception):
+    default_message = "The task ranking is invalid."
+
+    def __init__(self, message: Optional[str] = None):
+        super().__init__(message or self.default_message)
+
+
 class TaskRanking(Sequence):
 
     def __init__(
@@ -12,12 +19,21 @@ class TaskRanking(Sequence):
             ranks: Optional[Union[int, List[int]]] = None
     ):
 
-        assert len(esm_configs) == len(scores)
+        if len(esm_configs) != len(scores):
+            raise InvalidTaskRankingError(
+                f"Task ranking contains {len(esm_configs)} ESM configs but {len(scores)} scores."
+            )
 
-        sorting_order = np.argsort(scores)[::-1]
-        self.esm_configs = [esm_configs[idx] for idx in sorting_order]
-        self.scores = [scores[idx] for idx in sorting_order]
-        self.ranks = list(range(1, len(self)+1)) if ranks is None else [ranks[idx] for idx in sorting_order]
+        if ranks is not None and len(esm_configs) != len(ranks):
+            raise InvalidTaskRankingError(
+                f"Task ranking contains {len(esm_configs)} ESM configs but {len(ranks)} provided ranks."
+            )
+
+        self.esm_configs = esm_configs
+        self.scores = scores
+        self.ranks = ranks
+
+        self.sort()
 
     def __getitem__(self, index):
 
@@ -49,3 +65,9 @@ class TaskRanking(Sequence):
                                 f"Score: {round(score, score_rounding) if score_rounding else score}")
 
         return output_lines
+
+    def sort(self):
+        sorting_order = np.argsort(self.scores)[::-1]
+        self.esm_configs = [self.esm_configs[idx] for idx in sorting_order]
+        self.scores = [self.scores[idx] for idx in sorting_order]
+        self.ranks = list(range(1, len(self)+1)) if self.ranks is None else [self.ranks[idx] for idx in sorting_order]
