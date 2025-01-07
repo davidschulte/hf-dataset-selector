@@ -7,7 +7,7 @@ from torch import nn
 from torch.nn import MSELoss
 from torch.optim import AdamW
 import os
-from typing import Optional, List, Tuple
+from typing import Optional, List, Tuple, Union
 import time
 import json
 from tqdm import tqdm
@@ -26,7 +26,7 @@ class Trainer:
             weight_decay: float = 0.01,
             device: str = "cpu"
     ):
-        self.model = self._create_model() if model is None else model
+        self.model = model
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
         self.optimizer = optimizer or self._create_optimizer(self.model, weight_decay, learning_rate=learning_rate)
@@ -99,8 +99,12 @@ class ESMTrainer(Trainer):
 
         self.loss_fct = MSELoss()
 
-    def _create_model(self) -> ESM:
-        return ESM(optional_layer_dims=self.model_optional_layer_dims)
+    def _create_model(
+            self,
+            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
+            embedding_dim: Optional[int] = None,
+    ) -> ESM:
+        return ESM(architecture=architecture, embedding_dim=embedding_dim)
 
     def train_step(self, embeddings_batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]) -> float:
         self.model.train()
@@ -123,6 +127,7 @@ class ESMTrainer(Trainer):
     def train_with_embeddings(
             self,
             embeddings_dataset: EmbeddingDataset,
+            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = 'linear',
             output_filepath: str = None,
             num_epochs: int = 10,
             batch_size: int = 32,
@@ -132,6 +137,9 @@ class ESMTrainer(Trainer):
             if os.path.isfile(output_filepath) and not overwrite:
                 print('Found transformation network on disk.')
                 return ESM.from_pretrained(output_filepath)
+
+        if self.model is None:
+            self.model = self._create_model(architecture=architecture, embedding_dim=embeddings_dataset.embedding_dim)
 
         sampler = RandomSampler(embeddings_dataset)
         dataloader = DataLoader(embeddings_dataset, sampler=sampler, batch_size=batch_size)
@@ -185,6 +193,7 @@ class ESMTrainer(Trainer):
             base_model: PreTrainedModel,
             tuned_model: PreTrainedModel,
             tokenizer: "transformers.AutoTokenizer",
+            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = 'linear',
             model_output_filepath: Optional[str] = None,
             embeddings_output_filepath: Optional[str] = None,
             num_epochs: int = 10,
@@ -207,6 +216,7 @@ class ESMTrainer(Trainer):
 
         esm = self.train_with_embeddings(
             embeddings_dataset=embeddings_dataset,
+            architecture=architecture,
             output_filepath=model_output_filepath,
             num_epochs=num_epochs,
             batch_size=train_batch_size,

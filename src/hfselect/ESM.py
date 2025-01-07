@@ -5,44 +5,45 @@ import numpy as np
 from typing import List, Dict, Optional, Union
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download, create_repo, ModelCard, ModelCardData
 import os
+import warnings
 from .ESMConfig import ESMConfig, InvalidESMConfigError
 # from . import hf_api
+
+
+class ESMNotInitializedError(Exception):
+
+    custom_message = """
+    ESM was not initialized correctly. Define the ESM architecture before using it for training or inference.
+    """
+
+    def __init__(self, details_message: Optional[str] = None):
+        super().__init__(self.custom_message + details_message if details_message else self.custom_message)
 
 
 class ESM(nn.Module, PyTorchModelHubMixin):
 
     def __init__(
             self,
-            embedding_dim: int = 768,
-            optional_layer_dims: Optional[List[int]] = None,
+            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
+            embedding_dim: Optional[int] = None,
             config: Optional[Union[ESMConfig, Dict[str, Union[float, int, str]]]] = None
     ):
         super(ESM, self).__init__()
-        if isinstance(optional_layer_dims, int):
-            optional_layer_dims = [optional_layer_dims]
-        if optional_layer_dims is None:
-            self.layer_dims = [embedding_dim, embedding_dim]
-            # layers = [nn.Linear(EMBEDDING_SIZE, EMBEDDING_SIZE)]
-        else:
-            self.layer_dims = [embedding_dim] + optional_layer_dims + [embedding_dim]
-
-        self.embedding_dim = embedding_dim
-        self.relu = nn.ReLU()
-
-        # layers = [nn.Linear(input_dim, output_dim) for input_dim, output_dim in zip(dims, dims[1:])]
-        linear_layers = [nn.Linear(input_dim, output_dim) for input_dim, output_dim in zip(self.layer_dims, self.layer_dims[1:])]
-
-        layers = []
-        for ll in linear_layers:
-            layers += [ll, self.relu]
-        layers = layers[:-1]
-
-        # TODO: Fix bottleneck idx after relu insertion
-        self.bottleneck_idx = np.argmin(self.layer_dims[1:]) + 1
-        self.bottleneck_dim = np.min(self.layer_dims)
-        self.sequential = nn.Sequential(*layers)
 
         self.config = config
+        self.architecture = architecture
+        self.embedding_dim = embedding_dim
+
+        if not self.architecture:
+            self.model = None
+        else:
+            if self.architecture == "linear":
+                if embedding_dim is None:
+                    raise ESMNotInitializedError(details_message="Embedding dimension not provided.")
+
+                self.model = nn.Linear(self.embedding_dim, self.embedding_dim)
+            else:
+                raise NotImplementedError(f"Could not create ESM with custom architecture: {self.architecture}")
 
     def publish(
             self,
@@ -84,11 +85,23 @@ class ESM(nn.Module, PyTorchModelHubMixin):
 
         # device = torch.device(device_name)
         state_dict = load_file(filepath)
-        embedding_dim = state_dict['sequential.0.weight'].shape[1]
+        # embedding_dim = state_dict['sequential.0.weight'].shape[1]
 
-        esm = ESM(embedding_dim=embedding_dim)
-        esm.load_state_dict(state_dict)
+        esm = ESM().load_state_dict(state_dict)
 
+        # Convert legacy ESMs
+        if not hasattr(esm, "model") and hasattr(esm, "sequential"):
+            esm.model = esm.sequential
+            del esm.sequential
+            if isinstance(esm.model, nn.Sequential) and isinstance(esm.model[0], nn.Linear) and len(esm.model) == 1:
+                esm.model = esm.model[0]
+
+        if isinstance(esm.model, nn.Linear):
+            esm.architecture = "linear"
+            esm.embedding_dim = esm.model.in_features
+
+        else:
+            warnings.warn("Could not determine ESM architecture while loading.")
         return esm
 
     @classmethod
@@ -99,14 +112,10 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         return esm
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        return self.sequential(x)
+        if self.model is None:
+            raise ESMNotInitializedError()
 
-    def forward_bottleneck(self, x: torch.Tensor) -> torch.Tensor:
-        return self.sequential[:self.bottleneck_idx](x)
-
-    @property
-    def bottleneck_model(self) -> nn.Sequential:
-        return self.sequential[:self.bottleneck_idx]
+        return self.model(x)
 
     def __str__(self):
         return self.__repr__()
