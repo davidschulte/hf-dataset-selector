@@ -14,9 +14,6 @@ class InvalidEmbeddingDatasetError(Exception):
 
     def __init__(self, message: str):
         super().__init__(message)
-        # super().__init__(f"Number of base and transformed embeddings does not match: {len_x} != {len_y}.")
-        # self.len_x = len_x
-        # self.len_y = len_y
 
 
 class EmbeddingDataset(TorchDataset):
