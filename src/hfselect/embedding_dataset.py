@@ -12,10 +12,11 @@ import torch
 
 class InvalidEmbeddingDatasetError(Exception):
 
-    def __init__(self, len_x: int, len_y: int):
-        super().__init__(f"Number of base and transformed embeddings does not match: {len_x} != {len_y}.")
-        self.len_x = len_x
-        self.len_y = len_y
+    def __init__(self, message: str):
+        super().__init__(message)
+        # super().__init__(f"Number of base and transformed embeddings does not match: {len_x} != {len_y}.")
+        # self.len_x = len_x
+        # self.len_y = len_y
 
 
 class EmbeddingDataset(TorchDataset):
@@ -32,11 +33,18 @@ class EmbeddingDataset(TorchDataset):
             y = np.vstack(y)
 
         if len(x) != len(y):
-            raise InvalidEmbeddingDatasetError(len(x), len(y))
+            raise InvalidEmbeddingDatasetError(
+                f"Number of base and transformed embeddings does not match: {len(x)} != {len(y)}."
+            )
+
+        if x.shape[1] != y.shape[1]:
+            raise InvalidEmbeddingDatasetError(
+                f"Dimension of base and transformed embeddings does not match: {x.shape[1]} != {y.shape[1]}."
+            )
 
         self.x = x
         self.y = y
-
+        self.embedding_dim = x.shape[1]
         self.num_rows = len(self.x)
 
     @classmethod
