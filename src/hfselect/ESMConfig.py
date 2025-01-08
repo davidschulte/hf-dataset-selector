@@ -23,6 +23,7 @@ class ESMConfig(PretrainedConfig):
             seed: Optional[int] = None,
             language: Optional[str] = None,
             esm_architecture: Optional[str] = None,
+            esm_embedding_dim: Optional[int] = None,
             lm_num_epochs: Optional[int] = None,
             lm_batch_size: Optional[int] = None,
             lm_learning_rate: Optional[float] = None,
@@ -48,6 +49,7 @@ class ESMConfig(PretrainedConfig):
         self.seed = seed
         self.language = language
         self.esm_architecture = esm_architecture
+        self.esm_embedding_dim = esm_embedding_dim
         self.lm_num_epochs = lm_num_epochs
         self.lm_batch_size = lm_batch_size
         self.lm_learning_rate = lm_learning_rate
