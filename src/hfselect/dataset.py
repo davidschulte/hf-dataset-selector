@@ -80,15 +80,7 @@ class Dataset(TorchDataset):
             num_examples: Optional[int] = None,
             seed: Optional[int] = None,
             streaming: bool = False
-            # load_locally: bool = True
     ) -> "Dataset":
-        # if load_locally:
-        #     dataset_path = get_dataset_filepath(dataset_name=dataset_name,
-        #                                         split=split,
-        #                                         max_num_examples=max_num_examples,
-        #                                         seed=seed)
-        #     if os.path.isdir(dataset_path):
-        #         return load_from_disk(dataset_path)
 
         if subset is None:
             dataset = load_dataset(name, split=split, streaming=streaming)  # [12250:12750]
@@ -143,14 +135,13 @@ class Dataset(TorchDataset):
 
     def __len__(self):
         return self.dataset_len
-    #
-    # def save_locally(self):
-    #     filepath = get_dataset_filepath(dataset_name=self.dataset_name,
-    #                                     split=self.split,
-    #                                     max_num_examples=self.max_num_examples,
-    #                                     seed=self.seed)
-    #
-    #     self.dataset.save_to_disk(filepath)
+
+    def save(self, filepath) -> None:
+        torch.save(self, filepath)
+
+    @classmethod
+    def from_disk(cls, filepath) -> Union["Dataset", None]:
+        return torch.load(filepath)
 
     def collate_fn(
             self,
@@ -190,23 +181,3 @@ class Dataset(TorchDataset):
             labels = [self.class_label.str2int(label) for label in labels]
 
         return labels
-
-    # def train_test_split(self, train_size=0.8, test_size=None, seed=42, shuffle=True):
-    #     if test_size is not None:
-    #         train_size = 1 - test_size
-    #
-    #     train_dataset = copy(self)
-    #     test_dataset = copy(self)
-    #
-    #     split_internal_ds = self.dataset.train_test_split(train_size=train_size, seed=seed,
-    #                                                                         shuffle=shuffle)
-    #     internal_train_ds = split_internal_ds['train']
-    #     internal_test_ds = split_internal_ds['test']
-    #
-    #     train_dataset.dataset = internal_train_ds
-    #     train_dataset.dataset_len = len(internal_train_ds)
-    #
-    #     test_dataset.dataset = internal_test_ds
-    #     test_dataset.dataset_len = len(internal_test_ds)
-    #
-    #     return train_dataset, test_dataset
