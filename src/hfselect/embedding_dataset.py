@@ -8,6 +8,7 @@ from typing import Optional, Union, List
 from tqdm import tqdm
 from .model_utils import get_pooled_output
 import torch
+import warnings
 
 
 class InvalidEmbeddingDatasetError(Exception):
@@ -45,11 +46,16 @@ class EmbeddingDataset(TorchDataset):
         self.num_rows = len(self.x)
 
     @classmethod
-    def from_disk(cls, filepath):
-        x = np.loadtxt(os.path.join(filepath, 'standard_embeddings.csv'))
-        y = np.loadtxt(os.path.join(filepath, 'trained_embeddings.csv'))
+    def from_disk(cls, filepath: str):
+        embeddings = np.load(filepath)
+        x = embeddings["x"]
+        y = embeddings["y"]
 
         return EmbeddingDataset(x, y)
+
+    def save(self, filepath: str) -> None:
+        os.makedirs(os.path.dirname(filepath), exist_ok=True)
+        np.savez(filepath, x=self.x, y=self.y)
 
     def __getitem__(self, idx):
         return self.x[idx], self.y[idx]
@@ -66,21 +72,7 @@ def create_embedding_dataset(
         device_name: str = "cpu",
         output_path: Optional[str] = None,
         batch_size: int = 128,
-        overwrite: bool = True
 ) -> EmbeddingDataset:
-    if output_path:
-        standard_embeddings_filepath = os.path.join(output_path, f'standard_embeddings.csv')
-        trained_embeddings_filepath = os.path.join(output_path, f'trained_embeddings.csv')
-        if os.path.isfile(standard_embeddings_filepath) and os.path.isfile(
-                trained_embeddings_filepath) and not overwrite:
-            print("Found embeddings.")
-            return EmbeddingDataset.from_disk(output_path)
-
-        for embedding_filepath in [standard_embeddings_filepath, trained_embeddings_filepath]:
-            if os.path.exists(embedding_filepath):
-                os.remove(embedding_filepath)
-
-        os.makedirs(output_path, exist_ok=True)
 
     device = torch.device(device_name)
 
@@ -104,22 +96,17 @@ def create_embedding_dataset(
         b_input_ids, b_input_mask, _ = batch
 
         with torch.no_grad():
-            base_embeddings_batch = get_pooled_output(base_model, b_input_ids,
-                                                    b_input_mask).cpu().numpy()
+            base_embeddings_batch = get_pooled_output(base_model,b_input_ids,b_input_mask).cpu().numpy()
             trained_embeddings_batch = get_pooled_output(tuned_model, b_input_ids, b_input_mask).cpu().numpy()
 
-        if output_path:
-            with open(standard_embeddings_filepath, "ab") as f:
-                np.savetxt(f, base_embeddings_batch)
+        base_embeddings.append(base_embeddings_batch)
+        trained_embeddings.append(trained_embeddings_batch)
 
-            with open(trained_embeddings_filepath, "ab") as f:
-                np.savetxt(f, trained_embeddings_batch)
-
-        else:
-            base_embeddings.append(base_embeddings_batch)
-            trained_embeddings.append(trained_embeddings_batch)
+    embedding_dataset = EmbeddingDataset(base_embeddings, trained_embeddings)
 
     if output_path:
-        return EmbeddingDataset.from_disk(output_path)
+        if os.path.isfile(output_path):
+            warnings.warn(f"Overwriting embeddings dataset at path: {output_path}")
+        embedding_dataset.save(output_path)
 
-    return EmbeddingDataset(base_embeddings, trained_embeddings)
+    return embedding_dataset

@@ -15,6 +15,7 @@ from datetime import datetime
 from torch.utils.data import RandomSampler, DataLoader
 from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
 from .dataset import Dataset
+import warnings
 
 
 class Trainer:
@@ -131,12 +132,7 @@ class ESMTrainer(Trainer):
             output_filepath: str = None,
             num_epochs: int = 10,
             batch_size: int = 32,
-            overwrite: bool = False,
     ) -> ESM:
-        if output_filepath:
-            if os.path.isfile(output_filepath) and not overwrite:
-                print('Found transformation network on disk.')
-                return ESM.from_pretrained(output_filepath)
 
         if self.model is None:
             self.model = self._create_model(architecture=architecture, embedding_dim=embeddings_dataset.embedding_dim)
@@ -171,6 +167,9 @@ class ESMTrainer(Trainer):
         if output_filepath:
             output_dir = os.path.dirname(output_filepath)
             os.makedirs(output_dir, exist_ok=True)
+            if os.path.isfile(output_filepath):
+                warnings.warn(f"Overwriting ESM at path: {output_filepath}")
+
             torch.save(self.model.state_dict(), output_filepath)
             train_info_dict = {
                 'training_completed_timestamp': datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
@@ -200,8 +199,6 @@ class ESMTrainer(Trainer):
             train_batch_size: int = 32,
             embeddings_batch_size: int = 128,
             device_name: str = "cpu",
-            overwrite_model: bool = False,
-            overwrite_embeddings: bool = False
     ) -> ESM:
         embeddings_dataset = create_embedding_dataset(
             dataset=dataset,
@@ -209,10 +206,11 @@ class ESMTrainer(Trainer):
             tuned_model=tuned_model,
             tokenizer=tokenizer,
             batch_size=embeddings_batch_size,
-            output_path=embeddings_output_filepath,
             device_name=device_name,
-            overwrite=overwrite_embeddings
         )
+
+        if embeddings_output_filepath:
+            embeddings_dataset.save(embeddings_output_filepath)
 
         esm = self.train_with_embeddings(
             embeddings_dataset=embeddings_dataset,
@@ -220,7 +218,6 @@ class ESMTrainer(Trainer):
             output_filepath=model_output_filepath,
             num_epochs=num_epochs,
             batch_size=train_batch_size,
-            overwrite=overwrite_model
         )
 
         config = ESMConfig(
