@@ -1,3 +1,4 @@
+from .setup_logger import logger
 from .esm_logme import *
 from .ESM import *
 # from .ESMConfig import *

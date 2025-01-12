@@ -1,10 +1,9 @@
 from tqdm.auto import tqdm
 from huggingface_hub import HfApi
 from collections import defaultdict
-from typing import Union
-import warnings
-from .ESM import ESM
+from .ESM import ESM, ESMNotInitializedError
 from .ESMConfig import ESMConfig, InvalidESMConfigError
+from hfselect import logger
 
 
 def find_esm_repo_ids(model_name: str) -> list[str]:
@@ -16,14 +15,17 @@ def find_esm_repo_ids(model_name: str) -> list[str]:
 
 def fetch_esms(
         repo_ids: list[str],
-        return_failed_repo_ids=False
-) -> Union[list["ESM"], tuple[list["ESM"], dict[str, str]]]:
+) -> list[ESM]:
     esms = []
     errors = defaultdict(list)
     with tqdm(repo_ids, desc="Fetching ESMs", unit="ESM") as pbar:
         for repo_id in pbar:
             try:
                 esm = ESM.from_pretrained(repo_id)
+                esm.convert_legacy_to_new()
+
+                if not esm.is_initialized:
+                    raise ESMNotInitializedError
 
                 if not ESMConfig.from_esm(esm).is_valid:
                     raise InvalidESMConfigError
@@ -34,20 +36,16 @@ def fetch_esms(
                 errors[type(e).__name__].append(repo_id)
 
     if len(errors) > 0:
-        warning_message = format_warning_message(
-            errors=errors,
-            len_repo_ids=len(repo_ids),
-            return_failed_repo_ids=return_failed_repo_ids
-        )
-        warnings.warn(warning_message, Warning)
+        if len(errors) > 0:
+            logger.warning(f"Fetching  ESMs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs.")
+            logger.debug(errors)
 
-    return esms if not return_failed_repo_ids else (esms, errors)
+    return esms
 
 
 def fetch_esm_configs(
         repo_ids: list[str],
-        return_failed_repo_ids=False
-):
+) -> list[ESMConfig]:
     esm_configs = []
     errors = defaultdict(list)
     with tqdm(repo_ids, desc="Fetching ESM Configs", unit="ESM Config") as pbar:
@@ -63,21 +61,7 @@ def fetch_esm_configs(
                 errors[type(e).__name__].append(repo_id)
 
     if len(errors) > 0:
-        warning_message = format_warning_message(
-            errors=errors,
-            len_repo_ids=len(repo_ids),
-            return_failed_repo_ids=return_failed_repo_ids
-        )
-        warnings.warn(warning_message, Warning)
+        logger.warning(f"Fetching  ESM configs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs.")
+        logger.debug(errors)
 
     return esm_configs
-
-
-def format_warning_message(errors: dict[str, str], len_repo_ids: int, return_failed_repo_ids: bool):
-    warning_message = f"Fetching {len(errors)}/{len_repo_ids} failed. The following errors occurred:\n"
-    warning_message += "\n".join([f"{error_name}: {len(error_repo_ids)}"
-                                  for error_name, error_repo_ids in errors.items()])
-    if not return_failed_repo_ids:
-        warning_message += "\nTo return a dictionary of failed Repo IDs, set the 'return_failed_repo_ids' argument."
-
-    return warning_message
