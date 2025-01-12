@@ -19,20 +19,12 @@ class TaskRanking(Sequence):
             ranks: Optional[Union[int, List[int]]] = None
     ):
 
-        if len(esm_configs) != len(scores):
-            raise InvalidTaskRankingError(
-                f"Task ranking contains {len(esm_configs)} ESM configs but {len(scores)} scores."
-            )
-
-        if ranks is not None and len(esm_configs) != len(ranks):
-            raise InvalidTaskRankingError(
-                f"Task ranking contains {len(esm_configs)} ESM configs but {len(ranks)} provided ranks."
-            )
-
         self.esm_configs = esm_configs
         self.scores = scores
         self.ranks = ranks
 
+        self._remove_faulty_scores()
+        self.check_validity()
         self.sort()
 
     def __getitem__(self, index):
@@ -71,3 +63,34 @@ class TaskRanking(Sequence):
         self.esm_configs = [self.esm_configs[idx] for idx in sorting_order]
         self.scores = [self.scores[idx] for idx in sorting_order]
         self.ranks = list(range(1, len(self)+1)) if self.ranks is None else [self.ranks[idx] for idx in sorting_order]
+
+    def _remove_faulty_scores(self):
+        faulty_indices = [score for score in self.scores if np.isnan(score)]
+        self.esm_configs = self._remove_indices(self.esm_configs, faulty_indices)
+        self.scores = self._remove_indices(self.scores, faulty_indices)
+        self.ranks = self._remove_indices(self.ranks, faulty_indices)
+
+    @staticmethod
+    def _remove_indices(list_to_clean: Optional[list], indices: list[int]):
+        if list_to_clean is None:
+            return
+        if len(indices) == 0:
+            return list_to_clean
+
+        return [elem for idx, elem in enumerate(list_to_clean) if idx not in indices]
+
+    def check_validity(self):
+        if len(self.esm_configs) != len(self.scores):
+            raise InvalidTaskRankingError(
+                f"Task ranking contains {len(self.esm_configs)} ESM configs but {len(self.scores)} scores."
+            )
+
+        if self.ranks is not None and len(self.esm_configs) != len(self.ranks):
+            raise InvalidTaskRankingError(
+                f"Task ranking contains {len(self.esm_configs)} ESM configs but {len(self.ranks)} provided ranks."
+            )
+
+        if len(self.esm_configs) != 0:
+            raise InvalidTaskRankingError(
+                f"Task ranking is empty."
+            )
