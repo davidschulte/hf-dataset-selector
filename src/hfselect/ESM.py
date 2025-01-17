@@ -2,12 +2,12 @@ import torch
 from safetensors.torch import load_file
 import torch.nn as nn
 import numpy as np
-from typing import List, Dict, Optional, Union
+from typing import Dict, Optional, Union
 from huggingface_hub import PyTorchModelHubMixin, hf_hub_download, create_repo, ModelCard, ModelCardData
 import os
 import warnings
+from hfselect import logger
 from .ESMConfig import ESMConfig, InvalidESMConfigError
-# from . import hf_api
 
 
 class ESMNotInitializedError(Exception):
@@ -33,6 +33,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         self.config = config
         self.architecture = architecture
         self.embedding_dim = embedding_dim
+        self.sequential = nn.Sequential(nn.Linear(768, 768))
 
         if not self.architecture:
             self.model = None
@@ -58,7 +59,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         if not config.is_valid:
             raise InvalidESMConfigError()
 
-        self.push_to_hub(repo_id=repo_id)#, config=config)
+        self.push_to_hub(repo_id=repo_id)
         config.push_to_hub(repo_id=repo_id)
 
         card_data = ModelCardData(license='apache-2.0',
@@ -71,7 +72,6 @@ class ESM(nn.Module, PyTorchModelHubMixin):
             template_path=os.path.join(os.path.dirname(__file__), "modelcard_template.md"),
             model_id=config.task_id,
             model_description="ESM",
-            # datasets=[self.task_id],
             **config.to_dict()
         )
         card.push_to_hub(repo_id)
@@ -82,37 +82,30 @@ class ESM(nn.Module, PyTorchModelHubMixin):
             filepath: str,
             device_name: str = "cpu",
     ) -> "ESM":
-
-        # device = torch.device(device_name)
-        state_dict = load_file(filepath)
-        # embedding_dim = state_dict['sequential.0.weight'].shape[1]
-
-        esm = ESM().load_state_dict(state_dict)
-
-        # Convert legacy ESMs
-        if not hasattr(esm, "model") and hasattr(esm, "sequential"):
-            esm.model = esm.sequential
-            del esm.sequential
-            if isinstance(esm.model, nn.Sequential) and isinstance(esm.model[0], nn.Linear) and len(esm.model) == 1:
-                esm.model = esm.model[0]
-
-        if isinstance(esm.model, nn.Linear):
-            esm.architecture = "linear"
-            esm.embedding_dim = esm.model.in_features
-
+        if filepath.endswith(".pt"):
+            device = torch.device(device_name)
+            state_dict = torch.load(filepath, map_location=device)
+        elif filepath.endswith(".safetensors"):
+            state_dict = load_file(filepath)
         else:
-            warnings.warn("Could not determine ESM architecture while loading.")
+            logger.warning(f"Unknown file extension in model filepath: .{filepath.split('.')[-1]}")
+            state_dict = load_file(filepath)
+        esm = ESM()
+        esm.load_state_dict(state_dict)
+
+        esm.convert_legacy_to_new()
+
         return esm
 
-    @classmethod
-    def from_hugging_face(cls, repo_id: str) -> "ESM":
-        esm = ESM.from_disk(hf_hub_download(repo_id, filename="model.safetensors"))
-        esm.repo_id = repo_id
-
-        return esm
+    # @classmethod
+    # def from_hugging_face(cls, repo_id: str) -> "ESM":
+    #     esm = ESM.from_disk(hf_hub_download(repo_id, filename="model.safetensors"))
+    #     esm.repo_id = repo_id
+    #
+    #     return esm
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
-        if self.model is None:
+        if not self.is_initialized:
             raise ESMNotInitializedError()
 
         return self.model(x)
@@ -122,3 +115,22 @@ class ESM(nn.Module, PyTorchModelHubMixin):
 
     def __repr__(self):
         return f"ESM - Task ID: {self.config.get('task_id', 'N/A')} - Subset: {self.config.get('task_subset', 'N/A')}"
+
+    def convert_legacy_to_new(self):
+        # Convert legacy ESMs
+        if self.model is None and hasattr(self, "sequential"):
+            self.model = self.sequential
+            del self.sequential
+            if isinstance(self.model, nn.Sequential) and isinstance(self.model[0], nn.Linear) and len(self.model) == 1:
+                self.model = self.model[0]
+
+        if isinstance(self.model, nn.Linear):
+            self.architecture = "linear"
+            self.embedding_dim = self.model.in_features
+
+        else:
+            warnings.warn("Could not determine ESM architecture while loading.")
+
+    @property
+    def is_initialized(self):
+        return self.model is not None
