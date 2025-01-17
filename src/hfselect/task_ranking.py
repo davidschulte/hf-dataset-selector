@@ -90,7 +90,7 @@ class TaskRanking(Sequence):
                 f"Task ranking contains {len(self.esm_configs)} ESM configs but {len(self.ranks)} provided ranks."
             )
 
-        if len(self.esm_configs) != 0:
+        if len(self.esm_configs) == 0:
             raise InvalidTaskRankingError(
                 f"Task ranking is empty."
             )
