@@ -15,6 +15,11 @@ from transformers import AutoModel, AutoTokenizer
 from hfselect import logger
 
 
+class NoESMsFoundError(Exception):
+    def __init__(self):
+        super().__init__("No ESMs matching the search criteria could be found.")
+
+
 def compute_scores(
         dataset: Dataset,
         base_model: PreTrainedModel,
@@ -89,6 +94,10 @@ def compute_task_ranking(
            esm_repo_ids = find_esm_repo_ids(model_name=model_name)
 
         esms = fetch_esms(esm_repo_ids)
+
+    if len(esms) == 0:
+        logger.error("No ESMs matching the search criteria could be found.")
+        raise NoESMsFoundError
 
     bert_model = AutoModel.from_pretrained(model_name)
     tokenizer = AutoTokenizer.from_pretrained(model_name)
