@@ -160,7 +160,7 @@ def get_pooled_output(
         return base_model(input_ids, attention_mask=attention_mask)[0][:, 0, :]
 
     else:
-        raise Exception
+        raise NotImplementedError("Method for getting CLS embeddings is not implemented for this model.")
 
     # if pooling_method == 'bert_pooling':
     #     return base_model(input_ids, attention_mask=attention_mask)[1]
