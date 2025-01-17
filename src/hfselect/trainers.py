@@ -25,20 +25,20 @@ class Trainer:
             optimizer: Optional["torch.optim.Optimizer"] = None,
             learning_rate: float = 0.001,
             weight_decay: float = 0.01,
-            device: str = "cpu"
+            device_name: str = "cpu"
     ):
         self.model = model
         self.learning_rate = learning_rate
         self.weight_decay = weight_decay
-        self.optimizer = optimizer or self._create_optimizer(self.model, weight_decay, learning_rate=learning_rate)
+        self.optimizer = optimizer
         self.scheduler = None
 
-        if device != "cpu" and torch.cuda.is_available():
-            self.device = torch.device(device) if torch.cuda.is_available() else torch.device("cpu")
+        if device_name != "cpu" and torch.cuda.is_available():
+            self.device = torch.device(device_name) if torch.cuda.is_available() else torch.device("cpu")
         else:
             self.device = "cpu"
 
-        self.model.to(self.device)
+        # self.model.to(self.device)
 
         self.total_loss = 0
         self.num_train_examples = 0
@@ -51,13 +51,8 @@ class Trainer:
     def _create_model(self):
         pass
 
-    @staticmethod
-    def _create_optimizer(
-            model: nn.Module,
-            weight_decay: float,
-            learning_rate: float = 0.001
-    ) -> AdamW:
-        return AdamW(model.parameters(), lr=learning_rate, weight_decay=weight_decay)
+    def _create_optimizer(self, model: nn.Module) -> AdamW:
+        return AdamW(model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
 
     @staticmethod
     def _create_scheduler(
@@ -85,7 +80,7 @@ class ESMTrainer(Trainer):
             optimizer: Optional["torch.optim.Optimizer"] = None,
             weight_decay: float = 0.01,
             learning_rate: float = 0.001,
-            device: str = "cpu"
+            device_name: str = "cpu"
     ):
 
         self.model_optional_layer_dims = model_optional_layer_dims
@@ -95,7 +90,7 @@ class ESMTrainer(Trainer):
             optimizer=optimizer,
             weight_decay=weight_decay,
             learning_rate=learning_rate,
-            device=device
+            device_name=device_name
         )
 
         self.loss_fct = MSELoss()
@@ -137,12 +132,18 @@ class ESMTrainer(Trainer):
         if self.model is None:
             self.model = self._create_model(architecture=architecture, embedding_dim=embeddings_dataset.embedding_dim)
 
+        self.model.to(self.device)
+
+        if self.optimizer is None:
+            self.optimizer = self._create_optimizer(model=self.model)
+
         sampler = RandomSampler(embeddings_dataset)
         dataloader = DataLoader(embeddings_dataset, sampler=sampler, batch_size=batch_size)
 
         num_train_steps = len(dataloader) * num_epochs
 
         self.scheduler = self._create_scheduler(optimizer=self.optimizer, num_train_steps=num_train_steps)
+
 
         epoch_train_durations = []
         epoch_avg_losses = []
