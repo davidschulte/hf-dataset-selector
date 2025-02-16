@@ -127,6 +127,7 @@ class ESMTrainer(Trainer):
             output_filepath: str = None,
             num_epochs: int = 10,
             batch_size: int = 32,
+            verbose: int = 1
     ) -> ESM:
 
         if self.model is None:
@@ -148,22 +149,42 @@ class ESMTrainer(Trainer):
         epoch_train_durations = []
         epoch_avg_losses = []
         start_time = time.time()
-        for epoch_i in range(num_epochs):
+        with tqdm(
+                range(num_epochs),
+                desc=f"Training ESM",
+                unit="epoch",
+                disable=verbose < 1
+        ) as epoch_pbar:
 
-            self.reset_loss()
-            with tqdm(dataloader, desc=f'Training: Epoch {epoch_i} / {num_epochs}', unit='batch') as pbar:
+            for epoch_i in epoch_pbar:
+
+                self.reset_loss()
 
                 for step, batch in enumerate(pbar):
                     loss = self.train_step(batch)
+                with tqdm(
+                        dataloader,
+                        desc=f'Training: Epoch {epoch_i} / {num_epochs}',
+                        unit='batch',
+                        disable=verbose < 2
+                ) as batch_pbar:
 
-                    avg_train_loss = loss / batch_size
+                    for batch in batch_pbar:
+                        loss = self.train_step(batch)
 
-                    pbar.set_postfix(avg_train_loss=avg_train_loss)
+                        avg_train_loss = loss / batch_size
+
+                        epoch_pbar.set_postfix(avg_train_loss=avg_train_loss)
+                        batch_pbar.set_postfix(avg_train_loss=avg_train_loss)
+
 
             end_time = time.time()
             epoch_train_durations.append(end_time - start_time)
             start_time = end_time
             epoch_avg_losses.append(self.avg_loss)
+                end_time = time.time()
+                start_time = end_time
+                epoch_avg_losses.append(self.avg_loss)
 
         if output_filepath:
             output_dir = os.path.dirname(output_filepath)
