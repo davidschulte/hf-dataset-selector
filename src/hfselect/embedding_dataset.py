@@ -4,7 +4,7 @@ from .dataset import Dataset
 from transformers import PreTrainedModel, PreTrainedTokenizer
 from torch.utils.data import SequentialSampler, DataLoader
 import os
-from typing import Optional, Union, List
+from typing import Optional, Union, List, Iterable
 from tqdm import tqdm
 from .model_utils import get_pooled_output
 import torch
@@ -57,8 +57,10 @@ class EmbeddingDataset(TorchDataset):
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         np.savez(filepath, x=self.x, y=self.y)
 
-    def __getitem__(self, idx):
-        return self.x[idx], self.y[idx]
+    def __getitem__(self, idx: Union[int, Iterable[int]]):
+        if isinstance(idx, int):
+            return self.x[idx], self.y[idx]
+            # return EmbeddingDataset(self.x[idx][None, :], self.y[idx][None, :])
 
     def __len__(self):
         return self.num_rows
