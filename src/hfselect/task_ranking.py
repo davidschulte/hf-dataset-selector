@@ -1,6 +1,8 @@
 from typing import List, Optional, Union
 import numpy as np
 from collections.abc import Sequence
+from collections import defaultdict
+import pandas as pd
 
 
 class InvalidTaskRankingError(Exception):
@@ -94,3 +96,18 @@ class TaskRanking(Sequence):
             raise InvalidTaskRankingError(
                 f"Task ranking is empty."
             )
+
+    def to_pandas(self) -> pd.DataFrame:
+
+        return pd.DataFrame.from_dict({
+            "Rank": self.ranks,
+            "Task ID": [esm_config.task_id for esm_config in self.esm_configs],
+            "Task Subset": [esm_config.task_subset for esm_config in self.esm_configs],
+            "Text Column": [esm_config.text_column for esm_config in self.esm_configs],
+            "Label Column": [esm_config.label_column for esm_config in self.esm_configs],
+            "Task Split": [esm_config.task_split for esm_config in self.esm_configs],
+            "Num Examples": [esm_config.num_examples for esm_config in self.esm_configs],
+            "ESM Architecture": [esm_config.esm_architecture for esm_config in self.esm_configs],
+            "Score": self.scores
+        }).set_index("Rank")
+
