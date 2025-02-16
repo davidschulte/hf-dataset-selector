@@ -12,7 +12,7 @@ import time
 import json
 from tqdm import tqdm
 from datetime import datetime
-from torch.utils.data import RandomSampler, DataLoader
+from torch.utils.data import RandomSampler, SubsetRandomSampler, DataLoader
 from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
 from .dataset import Dataset
 import warnings
@@ -144,7 +144,6 @@ class ESMTrainer(Trainer):
         num_train_steps = len(dataloader) * num_epochs
 
         self.scheduler = self._create_scheduler(optimizer=self.optimizer, num_train_steps=num_train_steps)
-
 
         epoch_train_durations = []
         epoch_avg_losses = []
