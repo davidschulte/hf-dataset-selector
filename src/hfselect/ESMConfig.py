@@ -1,5 +1,14 @@
 from transformers import PretrainedConfig
-from typing import Optional
+from typing import Optional, Any, Union
+
+
+def _format_text_column_names(text_column: Union[str, tuple]):
+    if isinstance(text_column, str):
+        return text_column
+    elif isinstance(text_column, tuple):
+        return ",".join(text_column)
+    else:
+        return NotImplementedError(f"Can not format text column(s) of type {type(text_column)}.")
 
 
 class InvalidESMConfigError(Exception):
@@ -74,9 +83,9 @@ class ESMConfig(PretrainedConfig):
 
     def __str__(self):
         return (
-            f"ESMConfig -\tTask ID: {self.task_id} -\tTask Subset: {self.task_id} -\t Task Split: {self.task_split} -\t"
-            f"Text Column: {self.text_column} -\t Label Column: {self.label_column} -\t"
-            f"Num Examples: {self.num_examples}"
+            f"ESMConfig Task ID: {self.task_id:<50} Task Subset: {self.task_id:<50} Task Split: {self.task_split:<10}"
+            f"Text Column: {_format_text_column_names(self.text_column)}"
+            f"Label Column: {self.label_column:<10} Num Examples: {self.num_examples}"
         )
 
     def get(self, attr_name: str, default_return_val: Any = None):
