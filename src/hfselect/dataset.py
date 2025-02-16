@@ -115,6 +115,7 @@ class Dataset(TorchDataset):
         metadata = {
             "task_id": name,
             "task_subset": subset,
+            "text_column": text_col,
             "label_column": label_col,
             "task_split": split,
             "num_examples": num_examples,
