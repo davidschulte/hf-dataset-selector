@@ -1,4 +1,3 @@
-import pytest
 from hfselect import compute_task_ranking, find_esm_repo_ids
 
 

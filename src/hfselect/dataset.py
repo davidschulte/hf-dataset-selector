@@ -44,7 +44,7 @@ class Dataset(TorchDataset):
         self.dataset_len = len(self.dataset)
 
         if self.dataset_len == 0:
-            raise EmptyDatasetError(f'Dataset is empty.')
+            raise EmptyDatasetError('Dataset is empty.')
 
         label_features = self.dataset.features[label_col]
 

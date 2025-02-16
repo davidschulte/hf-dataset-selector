@@ -137,3 +137,9 @@ class ESM(nn.Module, PyTorchModelHubMixin):
     @property
     def is_initialized(self) -> bool:
         return self.model is not None
+
+    def create_config(self) -> ESMConfig:
+        if isinstance(self.config, ESMConfig):
+            return self.config
+
+        return ESMConfig(self.config)

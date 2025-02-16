@@ -1,5 +1,4 @@
 from hfselect.embedding_dataset import create_embedding_dataset
-from transformers import AutoModel, AutoTokenizer
 
 
 def test_embedding_dataset(bert_model, bert_tokenizer, imdb_dataset):

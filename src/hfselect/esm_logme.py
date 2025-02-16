@@ -7,7 +7,6 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 from .utils import fetch_esms, find_esm_repo_ids
 from .dataset import Dataset
 from .task_ranking import TaskRanking
-from .ESMConfig import ESMConfig
 from tqdm.auto import tqdm
 from typing import List, Optional
 from collections import defaultdict

@@ -90,7 +90,7 @@ class TaskRanking(Sequence):
 
         if len(self.esm_configs) == 0:
             raise InvalidTaskRankingError(
-                f"Task ranking is empty."
+                "Task ranking is empty."
             )
 
     def to_pandas(self) -> pd.DataFrame:

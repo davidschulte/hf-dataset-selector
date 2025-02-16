@@ -1,10 +1,9 @@
 from abc import abstractmethod
 from .ESM import ESM
 from .ESMConfig import ESMConfig
-from transformers import get_linear_schedule_with_warmup, PreTrainedModel
+from transformers import get_linear_schedule_with_warmup, PreTrainedModel, PreTrainedTokenizer
 import torch
 from torch import nn
-from torch.nn import MSELoss
 from torch.optim import AdamW
 import os
 from typing import Optional, List, Tuple, Union
@@ -93,7 +92,7 @@ class ESMTrainer(Trainer):
             device_name=device_name
         )
 
-        self.loss_fct = MSELoss()
+        self.loss_fct = nn.MSELoss()
 
     def _create_model(
             self,
@@ -150,7 +149,7 @@ class ESMTrainer(Trainer):
         start_time = time.time()
         with tqdm(
                 range(num_epochs),
-                desc=f"Training ESM",
+                desc="Training ESM",
                 unit="epoch",
                 disable=verbose < 1
         ) as epoch_pbar:
@@ -213,7 +212,7 @@ class ESMTrainer(Trainer):
             dataset: Dataset,
             base_model: PreTrainedModel,
             tuned_model: PreTrainedModel,
-            tokenizer: "transformers.AutoTokenizer",
+            tokenizer: PreTrainedTokenizer,
             architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = 'linear',
             model_output_filepath: Optional[str] = None,
             embeddings_output_filepath: Optional[str] = None,
