@@ -63,7 +63,7 @@ class TaskRanking(Sequence):
         self.ranks = list(range(1, len(self)+1)) if self.ranks is None else [self.ranks[idx] for idx in sorting_order]
 
     def _remove_faulty_scores(self):
-        faulty_indices = [score for score in self.scores if np.isnan(score)]
+        faulty_indices = [idx for idx, score in enumerate(self.scores) if np.isnan(score)]
         self.esm_configs = self._remove_indices(self.esm_configs, faulty_indices)
         self.scores = self._remove_indices(self.scores, faulty_indices)
         self.ranks = self._remove_indices(self.ranks, faulty_indices)
