@@ -1,16 +1,38 @@
 from tqdm.auto import tqdm
-from huggingface_hub import HfApi
+from typing import Optional
+from huggingface_hub import HfApi, model_info
 from collections import defaultdict
 from .ESM import ESM, ESMNotInitializedError
 from .ESMConfig import ESMConfig, InvalidESMConfigError
 from hfselect import logger
 
 
-def find_esm_repo_ids(model_name: str) -> list[str]:
-    hf_api = HfApi()
-    model_infos = hf_api.list_models(filter=["embedding_space_map", f"BaseLM:{model_name}"])
+def find_esm_repo_ids(model_name: Optional[str], filters: Optional[list[str]] = None) -> list[str]:
+    esm_infos = find_esm_model_infos(model_name, filters=filters)
+    return [esm_info.id for esm_info in esm_infos]
 
-    return [model_info.id for model_info in model_infos]
+
+def find_esm_model_infos(model_name: Optional[str], filters: Optional[list[str]] = None) -> list["ModelInfo"]:
+    hf_api = HfApi()
+
+    if filters is None:
+        filters = []
+    elif isinstance(filters, str):
+        filters = [filters]
+
+    filters.append("embedding_space_map")
+
+    if model_name:
+        """
+        Make sure that the possibly redirected repo name is used,
+        e.g. google-bert/bert-base-uncased instead of bert-base-uncased
+        """
+        model_name = model_info(model_name).id
+
+        # filters.append(f"BaseLM:{model_name}")
+        filters.append(f"base_model:{model_name}")
+
+    return list(hf_api.list_models(filter=filters))
 
 
 def fetch_esms(
