@@ -55,7 +55,7 @@ class TaskRanking(Sequence):
     def _format_for_output(self, score_rounding: Optional[int] = None):
         output_lines = []
         for rank, esm_config, score in zip(self.ranks, self.esm_configs, self.scores):
-            output_lines.append(f"{rank}.\t{esm_config.task_id}\t- "
+            output_lines.append(f"{str(rank)+'.':<5}{esm_config.task_id:<50}"
                                 f"Score: {round(score, score_rounding) if score_rounding else score}")
 
         return output_lines
