@@ -181,6 +181,13 @@ class ESMTrainer(Trainer):
                 start_time = end_time
                 epoch_avg_losses.append(self.avg_loss)
 
+        self.model.config = ESMConfig(
+            esm_num_epochs=num_epochs,
+            esm_learning_rate=self.learning_rate,
+            esm_weight_decay=self.weight_decay,
+            esm_batch_size=batch_size
+        )
+
         if output_filepath:
             output_dir = os.path.dirname(output_filepath)
             os.makedirs(output_dir, exist_ok=True)
@@ -237,15 +244,6 @@ class ESMTrainer(Trainer):
             batch_size=train_batch_size,
         )
 
-        config = ESMConfig(
-            base_model_name=base_model.config.name_or_path,
-            esm_num_epochs=num_epochs,
-            esm_batch_size=train_batch_size,
-            esm_learning_rate=self.learning_rate,
-            esm_weight_decay=self.weight_decay,
-            **dataset.metadata
-        )
-
-        esm.config = config
+        esm.config.update({**{"base_model_name": base_model.config.name_or_path}, **dataset.metadata})
 
         return esm
