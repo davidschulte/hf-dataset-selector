@@ -19,11 +19,7 @@ class InvalidEmbeddingDatasetError(Exception):
 
 class EmbeddingDataset(TorchDataset):
 
-    def __init__(
-            self,
-            x: Union[np.array, List[np.array]],
-            y: Union[np.array, List[np.array]],
-            ):
+    def __init__(self, x: Union[np.array, List[np.array]], y: Union[np.array, List[np.array]]):
 
         if isinstance(x, list):
             x = np.vstack(x)
@@ -62,7 +58,9 @@ class EmbeddingDataset(TorchDataset):
             return self.x[idx], self.y[idx]
             # return EmbeddingDataset(self.x[idx][None, :], self.y[idx][None, :])
 
-    def __len__(self):
+        return EmbeddingDataset(self.x[idx], self.y[idx])
+
+    def __len__(self) -> int:
         return self.num_rows
 
 
@@ -83,7 +81,6 @@ def create_embedding_dataset(
 
     base_model.eval()
     tuned_model.eval()
-    print('Loading models complete!')
 
     sampler = SequentialSampler(dataset)
     dataloader = DataLoader(dataset,
@@ -93,22 +90,23 @@ def create_embedding_dataset(
     base_embeddings = []
     trained_embeddings = []
 
-    for step, batch in enumerate(tqdm(dataloader)):
-        batch = tuple(t.to(device) for t in batch)
-        b_input_ids, b_input_mask, _ = batch
+    with tqdm(dataloader, desc="Computing embedding dataset", unit="batch") as pbar:
+        for batch in pbar:
+            batch = tuple(t.to(device) for t in batch)
+            b_input_ids, b_input_mask, _ = batch
 
-        with torch.no_grad():
-            base_embeddings_batch = get_pooled_output(base_model,b_input_ids,b_input_mask).cpu().numpy()
-            trained_embeddings_batch = get_pooled_output(tuned_model, b_input_ids, b_input_mask).cpu().numpy()
+            with torch.no_grad():
+                base_embeddings_batch = get_pooled_output(base_model,b_input_ids,b_input_mask).cpu().numpy()
+                trained_embeddings_batch = get_pooled_output(tuned_model, b_input_ids, b_input_mask).cpu().numpy()
 
-        base_embeddings.append(base_embeddings_batch)
-        trained_embeddings.append(trained_embeddings_batch)
+            base_embeddings.append(base_embeddings_batch)
+            trained_embeddings.append(trained_embeddings_batch)
 
-    embedding_dataset = EmbeddingDataset(base_embeddings, trained_embeddings)
+        embedding_dataset = EmbeddingDataset(base_embeddings, trained_embeddings)
 
-    if output_path:
-        if os.path.isfile(output_path):
-            warnings.warn(f"Overwriting embeddings dataset at path: {output_path}")
-        embedding_dataset.save(output_path)
+        if output_path:
+            if os.path.isfile(output_path):
+                warnings.warn(f"Overwriting embeddings dataset at path: {output_path}")
+            embedding_dataset.save(output_path)
 
-    return embedding_dataset
+        return embedding_dataset
