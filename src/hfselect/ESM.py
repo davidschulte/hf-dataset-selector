@@ -1,9 +1,8 @@
 import torch
 from safetensors.torch import load_file, save_file
 import torch.nn as nn
-import numpy as np
 from typing import Dict, Optional, Union
-from huggingface_hub import PyTorchModelHubMixin, hf_hub_download, create_repo, ModelCard, ModelCardData
+from huggingface_hub import PyTorchModelHubMixin, create_repo, ModelCard, ModelCardData
 import os
 import warnings
 from hfselect import logger
