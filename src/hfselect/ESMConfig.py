@@ -47,7 +47,6 @@ class ESMConfig(PretrainedConfig):
             **kwargs
     ):
         super().__init__(**kwargs)
-
         self.base_model_name = base_model_name
         self.task_id = task_id
         self.task_subset = task_subset
@@ -71,7 +70,6 @@ class ESMConfig(PretrainedConfig):
         self.esm_optimizer = esm_optimizer
         self.developers = developers
 
-
     @property
     def is_valid(self) -> bool:
         return self.base_model_name and isinstance(self.base_model_name, str)  and \
@@ -81,13 +79,13 @@ class ESMConfig(PretrainedConfig):
     def from_esm(cls, esm: "ESM"):
         return ESMConfig(**esm.config)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return (
             f"ESMConfig Task ID: {self.task_id:<50} Task Subset: {self.task_id:<50} Task Split: {self.task_split:<10}"
             f"Text Column: {_format_text_column_names(self.text_column)}"
             f"Label Column: {self.label_column:<10} Num Examples: {self.num_examples}"
         )
 
-    def get(self, attr_name: str, default_return_val: Any = None):
+    def get(self, attr_name: str, default_return_val: Any = None) -> Any:
         return self.__dict__.get(attr_name, default_return_val)
 
