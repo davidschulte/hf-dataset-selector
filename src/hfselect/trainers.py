@@ -160,8 +160,6 @@ class ESMTrainer(Trainer):
 
                 self.reset_loss()
 
-                for step, batch in enumerate(pbar):
-                    loss = self.train_step(batch)
                 with tqdm(
                         dataloader,
                         desc=f'Training: Epoch {epoch_i} / {num_epochs}',
@@ -178,11 +176,8 @@ class ESMTrainer(Trainer):
                         batch_pbar.set_postfix(avg_train_loss=avg_train_loss)
 
 
-            end_time = time.time()
-            epoch_train_durations.append(end_time - start_time)
-            start_time = end_time
-            epoch_avg_losses.append(self.avg_loss)
                 end_time = time.time()
+                epoch_train_durations.append(end_time - start_time)
                 start_time = end_time
                 epoch_avg_losses.append(self.avg_loss)
 
