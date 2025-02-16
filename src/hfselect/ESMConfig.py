@@ -78,3 +78,7 @@ class ESMConfig(PretrainedConfig):
             f"Text Column: {self.text_column} -\t Label Column: {self.label_column} -\t"
             f"Num Examples: {self.num_examples}"
         )
+
+    def get(self, attr_name: str, default_return_val: Any = None):
+        return self.__dict__.get(attr_name, default_return_val)
+
