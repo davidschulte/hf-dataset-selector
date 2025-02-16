@@ -1,5 +1,5 @@
 import torch
-from safetensors.torch import load_file
+from safetensors.torch import load_file, save_file
 import torch.nn as nn
 import numpy as np
 from typing import Dict, Optional, Union
@@ -97,12 +97,8 @@ class ESM(nn.Module, PyTorchModelHubMixin):
 
         return esm
 
-    # @classmethod
-    # def from_hugging_face(cls, repo_id: str) -> "ESM":
-    #     esm = ESM.from_disk(hf_hub_download(repo_id, filename="model.safetensors"))
-    #     esm.repo_id = repo_id
-    #
-    #     return esm
+    def to_disk(self, filepath: str):
+        save_file(self.state_dict(), filepath)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         if not self.is_initialized:
