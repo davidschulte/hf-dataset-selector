@@ -102,7 +102,7 @@ class ESMTrainer(Trainer):
     ) -> ESM:
         return ESM(architecture=architecture, embedding_dim=embedding_dim)
 
-    def train_step(self, embeddings_batch: Tuple[torch.Tensor, torch.Tensor, torch.Tensor]) -> float:
+    def train_step(self, embeddings_batch: Tuple[torch.Tensor, torch.Tensor]) -> float:
         self.model.train()
 
         embeddings_batch = tuple(b.to(self.device) for b in embeddings_batch)
