@@ -7,12 +7,16 @@ from .ESMConfig import ESMConfig, InvalidESMConfigError
 from hfselect import logger
 
 
-def find_esm_repo_ids(model_name: Optional[str], filters: Optional[list[str]] = None) -> list[str]:
+def find_esm_repo_ids(
+    model_name: Optional[str], filters: Optional[list[str]] = None
+) -> list[str]:
     esm_infos = find_esm_model_infos(model_name, filters=filters)
     return [esm_info.id for esm_info in esm_infos]
 
 
-def find_esm_model_infos(model_name: Optional[str], filters: Optional[list[str]] = None) -> list[ModelInfo]:
+def find_esm_model_infos(
+    model_name: Optional[str], filters: Optional[list[str]] = None
+) -> list[ModelInfo]:
     hf_api = HfApi()
 
     if filters is None:
@@ -36,7 +40,7 @@ def find_esm_model_infos(model_name: Optional[str], filters: Optional[list[str]]
 
 
 def fetch_esms(
-        repo_ids: list[str],
+    repo_ids: list[str],
 ) -> list[ESM]:
     esms = []
     errors = defaultdict(list)
@@ -59,14 +63,16 @@ def fetch_esms(
 
     if len(errors) > 0:
         if len(errors) > 0:
-            logger.warning(f"Fetching  ESMs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs.")
+            logger.warning(
+                f"Fetching  ESMs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs."
+            )
             logger.debug(errors)
 
     return esms
 
 
 def fetch_esm_configs(
-        repo_ids: list[str],
+    repo_ids: list[str],
 ) -> list[ESMConfig]:
     esm_configs = []
     errors = defaultdict(list)
@@ -83,7 +89,9 @@ def fetch_esm_configs(
                 errors[type(e).__name__].append(repo_id)
 
     if len(errors) > 0:
-        logger.warning(f"Fetching ESM configs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs.")
+        logger.warning(
+            f"Fetching ESM configs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs."
+        )
         logger.debug(errors)
 
     return esm_configs

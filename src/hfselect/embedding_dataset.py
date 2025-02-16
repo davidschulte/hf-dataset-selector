@@ -12,15 +12,14 @@ import warnings
 
 
 class InvalidEmbeddingDatasetError(Exception):
-
     def __init__(self, message: str):
         super().__init__(message)
 
 
 class EmbeddingDataset(TorchDataset):
-
-    def __init__(self, x: Union[np.array, List[np.array]], y: Union[np.array, List[np.array]]):
-
+    def __init__(
+        self, x: Union[np.array, List[np.array]], y: Union[np.array, List[np.array]]
+    ):
         if isinstance(x, list):
             x = np.vstack(x)
         if isinstance(y, list):
@@ -65,15 +64,14 @@ class EmbeddingDataset(TorchDataset):
 
 
 def create_embedding_dataset(
-        dataset: Dataset,
-        base_model: PreTrainedModel,
-        tuned_model: PreTrainedModel,
-        tokenizer: PreTrainedTokenizer,
-        device_name: str = "cpu",
-        output_path: Optional[str] = None,
-        batch_size: int = 128,
+    dataset: Dataset,
+    base_model: PreTrainedModel,
+    tuned_model: PreTrainedModel,
+    tokenizer: PreTrainedTokenizer,
+    device_name: str = "cpu",
+    output_path: Optional[str] = None,
+    batch_size: int = 128,
 ) -> EmbeddingDataset:
-
     device = torch.device(device_name)
 
     base_model.to(device)
@@ -83,10 +81,12 @@ def create_embedding_dataset(
     tuned_model.eval()
 
     sampler = SequentialSampler(dataset)
-    dataloader = DataLoader(dataset,
-                            sampler=sampler,
-                            batch_size=batch_size,
-                            collate_fn=lambda x: dataset.collate_fn(x, tokenizer=tokenizer))
+    dataloader = DataLoader(
+        dataset,
+        sampler=sampler,
+        batch_size=batch_size,
+        collate_fn=lambda x: dataset.collate_fn(x, tokenizer=tokenizer),
+    )
     base_embeddings = []
     trained_embeddings = []
 
@@ -96,8 +96,16 @@ def create_embedding_dataset(
             b_input_ids, b_input_mask, _ = batch
 
             with torch.no_grad():
-                base_embeddings_batch = get_pooled_output(base_model, b_input_ids, b_input_mask).cpu().numpy()
-                trained_embeddings_batch = get_pooled_output(tuned_model, b_input_ids, b_input_mask).cpu().numpy()
+                base_embeddings_batch = (
+                    get_pooled_output(base_model, b_input_ids, b_input_mask)
+                    .cpu()
+                    .numpy()
+                )
+                trained_embeddings_batch = (
+                    get_pooled_output(tuned_model, b_input_ids, b_input_mask)
+                    .cpu()
+                    .numpy()
+                )
 
             base_embeddings.append(base_embeddings_batch)
             trained_embeddings.append(trained_embeddings_batch)

@@ -8,7 +8,7 @@ import numpy as np
 from typing import Optional, Union, List, Tuple
 
 DATASET_STREAMING_BUFFER_SIZE = 100000
-TEXT_SEPARATOR = ' [SEP] '
+TEXT_SEPARATOR = " [SEP] "
 
 
 class EmptyDatasetError(Exception):
@@ -27,14 +27,13 @@ def concat_columns(inputs, column_list: tuple):
 
 
 class Dataset(TorchDataset):
-
     def __init__(
-            self,
-            dataset: Union[HFDataset, IterableDataset],
-            text_col: Union[str, Tuple[str]],
-            label_col: str,
-            is_regression: bool,
-            metadata: Optional[dict] = None,
+        self,
+        dataset: Union[HFDataset, IterableDataset],
+        text_col: Union[str, Tuple[str]],
+        label_col: str,
+        is_regression: bool,
+        metadata: Optional[dict] = None,
     ):
         self.dataset = dataset
         self.text_col = text_col
@@ -44,19 +43,21 @@ class Dataset(TorchDataset):
         self.dataset_len = len(self.dataset)
 
         if self.dataset_len == 0:
-            raise EmptyDatasetError('Dataset is empty.')
+            raise EmptyDatasetError("Dataset is empty.")
 
         label_features = self.dataset.features[label_col]
 
-        self.has_string_labels = label_features.dtype == 'string'
+        self.has_string_labels = label_features.dtype == "string"
         if self.has_string_labels:
             if isinstance(dataset, IterableDataset):
-                label_list = sorted(list(set([example[label_col] for example in self.dataset])))
+                label_list = sorted(
+                    list(set([example[label_col] for example in self.dataset]))
+                )
             else:
                 label_list = sorted(list(set(self.dataset[label_col])))
             self.label_dim = len(label_list)
             self.class_label = ClassLabel(num_classes=self.label_dim, names=label_list)
-        elif 'float' in label_features.dtype:
+        elif "float" in label_features.dtype:
             self.label_dim = 1
             self.class_label = None
         else:
@@ -70,36 +71,41 @@ class Dataset(TorchDataset):
 
     @classmethod
     def from_hugging_face(
-            cls,
-            name: str,
-            split: str,
-            text_col: Union[str, List[str]],
-            label_col: str,
-            is_regression: bool,
-            subset: Optional[str] = None,
-            num_examples: Optional[int] = None,
-            seed: Optional[int] = None,
-            streaming: bool = False
+        cls,
+        name: str,
+        split: str,
+        text_col: Union[str, List[str]],
+        label_col: str,
+        is_regression: bool,
+        subset: Optional[str] = None,
+        num_examples: Optional[int] = None,
+        seed: Optional[int] = None,
+        streaming: bool = False,
     ) -> "Dataset":
-
         if subset is None:
-            dataset = load_dataset(name, split=split, streaming=streaming)  # [12250:12750]
+            dataset = load_dataset(name, split=split, streaming=streaming)
         else:
-            dataset = load_dataset(name, subset, split=split, streaming=streaming)  # [12250:12750]
+            dataset = load_dataset(name, subset, split=split, streaming=streaming)
 
-        cols_to_keep = text_col + [label_col] if isinstance(text_col, list) else [text_col, label_col]
+        cols_to_keep = (
+            text_col + [label_col]
+            if isinstance(text_col, list)
+            else [text_col, label_col]
+        )
         dataset = dataset.select_columns(cols_to_keep)
 
         task_type = "regression" if is_regression else "classification"
-        if task_type == 'classification':
+        if task_type == "classification":
             dataset = dataset.filter(lambda example: example[label_col] != -1)
 
         if num_examples is not None:
             if streaming:
-                dataset = dataset.shuffle(seed=seed, buffer_size=DATASET_STREAMING_BUFFER_SIZE).take(num_examples)
+                dataset = dataset.shuffle(
+                    seed=seed, buffer_size=DATASET_STREAMING_BUFFER_SIZE
+                ).take(num_examples)
                 dataset = HFDataset.from_generator(
                     partial(gen_from_iterable_dataset, dataset),
-                    features=dataset.features
+                    features=dataset.features,
                 )
             else:
                 num_examples = min(len(dataset), num_examples)
@@ -109,7 +115,7 @@ class Dataset(TorchDataset):
             if streaming:
                 dataset = HFDataset.from_generator(
                     partial(gen_from_iterable_dataset, dataset),
-                    features=dataset.features
+                    features=dataset.features,
                 )
 
         metadata = {
@@ -145,28 +151,36 @@ class Dataset(TorchDataset):
         return torch.load(filepath)
 
     def collate_fn(
-            self,
-            rows: dict,
-            tokenizer: PreTrainedTokenizer,
-            max_length: int = 128,
-            return_token_type_ids: bool = False
+        self,
+        rows: dict,
+        tokenizer: PreTrainedTokenizer,
+        max_length: int = 128,
+        return_token_type_ids: bool = False,
     ):
         texts = self._preprocess_texts(rows)
         labels = self._preprocess_labels(rows)
 
-        tokenized = tokenizer(texts,
-                              padding='max_length',
-                              truncation=True,
-                              max_length=max_length,
-                              return_tensors='pt',
-                              return_token_type_ids=return_token_type_ids)
+        tokenized = tokenizer(
+            texts,
+            padding="max_length",
+            truncation=True,
+            max_length=max_length,
+            return_tensors="pt",
+            return_token_type_ids=return_token_type_ids,
+        )
         if return_token_type_ids:
-            return tokenized.data['input_ids'], \
-                   tokenized.data['attention_mask'], \
-                   tokenized.data['token_type_ids'], \
-                   torch.tensor(labels)
+            return (
+                tokenized.data["input_ids"],
+                tokenized.data["attention_mask"],
+                tokenized.data["token_type_ids"],
+                torch.tensor(labels),
+            )
 
-        return tokenized.data['input_ids'], tokenized.data['attention_mask'], torch.tensor(labels)
+        return (
+            tokenized.data["input_ids"],
+            tokenized.data["attention_mask"],
+            torch.tensor(labels),
+        )
 
     def _preprocess_texts(self, rows):
         if isinstance(self.text_col, (list, tuple)):

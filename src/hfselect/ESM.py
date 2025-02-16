@@ -10,22 +10,24 @@ from .ESMConfig import ESMConfig, InvalidESMConfigError
 
 
 class ESMNotInitializedError(Exception):
-
     custom_message = """
     ESM was not initialized correctly. Define the ESM architecture before using it for training or inference.
     """
 
     def __init__(self, details_message: Optional[str] = None):
-        super().__init__(self.custom_message + details_message if details_message else self.custom_message)
+        super().__init__(
+            self.custom_message + details_message
+            if details_message
+            else self.custom_message
+        )
 
 
 class ESM(nn.Module, PyTorchModelHubMixin):
-
     def __init__(
-            self,
-            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
-            embedding_dim: Optional[int] = None,
-            config: Optional[Union[ESMConfig, Dict[str, Union[float, int, str]]]] = None
+        self,
+        architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
+        embedding_dim: Optional[int] = None,
+        config: Optional[Union[ESMConfig, Dict[str, Union[float, int, str]]]] = None,
     ):
         super(ESM, self).__init__()
 
@@ -39,16 +41,20 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         else:
             if self.architecture == "linear":
                 if embedding_dim is None:
-                    raise ESMNotInitializedError(details_message="Embedding dimension not provided.")
+                    raise ESMNotInitializedError(
+                        details_message="Embedding dimension not provided."
+                    )
 
                 self.model = nn.Linear(self.embedding_dim, self.embedding_dim)
             else:
-                raise NotImplementedError(f"Could not create ESM with custom architecture: {self.architecture}")
+                raise NotImplementedError(
+                    f"Could not create ESM with custom architecture: {self.architecture}"
+                )
 
     def publish(
-            self,
-            repo_id: str,
-            config: Optional[Union[ESMConfig, Dict[str, Union[float, int, str]]]] = None
+        self,
+        repo_id: str,
+        config: Optional[Union[ESMConfig, Dict[str, Union[float, int, str]]]] = None,
     ) -> None:
         create_repo(repo_id=repo_id, exist_ok=True)
 
@@ -62,25 +68,29 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         self.push_to_hub(repo_id=repo_id)
         config.push_to_hub(repo_id=repo_id)
 
-        card_data = ModelCardData(license='apache-2.0',
-                                  datasets=[config.task_id],
-                                  base_model=config.base_model_name,
-                                  tags=["embedding_space_map", f"BaseLM:{config.base_model_name}"])
+        card_data = ModelCardData(
+            license="apache-2.0",
+            datasets=[config.task_id],
+            base_model=config.base_model_name,
+            tags=["embedding_space_map", f"BaseLM:{config.base_model_name}"],
+        )
 
         card = ModelCard.from_template(
             card_data,
-            template_path=os.path.join(os.path.dirname(__file__), "modelcard_template.md"),
+            template_path=os.path.join(
+                os.path.dirname(__file__), "modelcard_template.md"
+            ),
             model_id=config.task_id,
             model_description="ESM",
-            **config.to_dict()
+            **config.to_dict(),
         )
         card.push_to_hub(repo_id)
 
     @classmethod
     def from_disk(
-            cls,
-            filepath: str,
-            device_name: str = "cpu",
+        cls,
+        filepath: str,
+        device_name: str = "cpu",
     ) -> "ESM":
         if filepath.endswith(".pt"):
             device = torch.device(device_name)
@@ -88,7 +98,9 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         elif filepath.endswith(".safetensors"):
             state_dict = load_file(filepath)
         else:
-            logger.warning(f"Unknown file extension in model filepath: .{filepath.split('.')[-1]}")
+            logger.warning(
+                f"Unknown file extension in model filepath: .{filepath.split('.')[-1]}"
+            )
             state_dict = load_file(filepath)
         esm = ESM()
         esm.load_state_dict(state_dict)
@@ -119,9 +131,9 @@ class ESM(nn.Module, PyTorchModelHubMixin):
             if self.model is None:
                 self.model = self.sequential
                 if (
-                        isinstance(self.model, nn.Sequential)
-                        and isinstance(self.model[0], nn.Linear)
-                        and len(self.model) == 1
+                    isinstance(self.model, nn.Sequential)
+                    and isinstance(self.model[0], nn.Linear)
+                    and len(self.model) == 1
                 ):
                     self.model = self.model[0]
 

@@ -1,7 +1,11 @@
 from abc import abstractmethod
 from .ESM import ESM
 from .ESMConfig import ESMConfig
-from transformers import get_linear_schedule_with_warmup, PreTrainedModel, PreTrainedTokenizer
+from transformers import (
+    get_linear_schedule_with_warmup,
+    PreTrainedModel,
+    PreTrainedTokenizer,
+)
 import torch
 from torch import nn
 from torch.optim import AdamW
@@ -19,12 +23,12 @@ import warnings
 
 class Trainer:
     def __init__(
-            self,
-            model: Optional[nn.Module] = None,
-            optimizer: Optional["torch.optim.Optimizer"] = None,
-            learning_rate: float = 0.001,
-            weight_decay: float = 0.01,
-            device_name: str = "cpu"
+        self,
+        model: Optional[nn.Module] = None,
+        optimizer: Optional["torch.optim.Optimizer"] = None,
+        learning_rate: float = 0.001,
+        weight_decay: float = 0.01,
+        device_name: str = "cpu",
     ):
         self.model = model
         self.learning_rate = learning_rate
@@ -33,7 +37,11 @@ class Trainer:
         self.scheduler = None
 
         if device_name != "cpu" and torch.cuda.is_available():
-            self.device = torch.device(device_name) if torch.cuda.is_available() else torch.device("cpu")
+            self.device = (
+                torch.device(device_name)
+                if torch.cuda.is_available()
+                else torch.device("cpu")
+            )
         else:
             self.device = "cpu"
 
@@ -51,16 +59,17 @@ class Trainer:
         pass
 
     def _create_optimizer(self, model: nn.Module) -> AdamW:
-        return AdamW(model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay)
+        return AdamW(
+            model.parameters(), lr=self.learning_rate, weight_decay=self.weight_decay
+        )
 
     @staticmethod
     def _create_scheduler(
-            optimizer: "torch.optim.Optimizer",
-            num_train_steps: int
+        optimizer: "torch.optim.Optimizer", num_train_steps: int
     ) -> "torch.optim.lr_scheduler.LRScheduler":
-        return get_linear_schedule_with_warmup(optimizer,
-                                               num_warmup_steps=0,
-                                               num_training_steps=num_train_steps)
+        return get_linear_schedule_with_warmup(
+            optimizer, num_warmup_steps=0, num_training_steps=num_train_steps
+        )
 
     def reset_loss(self):
         self.total_loss = 0
@@ -73,15 +82,14 @@ class Trainer:
 
 class ESMTrainer(Trainer):
     def __init__(
-            self,
-            model: Optional[nn.Module] = None,
-            model_optional_layer_dims: Optional[List[int]] = None,
-            optimizer: Optional["torch.optim.Optimizer"] = None,
-            weight_decay: float = 0.01,
-            learning_rate: float = 0.001,
-            device_name: str = "cpu"
+        self,
+        model: Optional[nn.Module] = None,
+        model_optional_layer_dims: Optional[List[int]] = None,
+        optimizer: Optional["torch.optim.Optimizer"] = None,
+        weight_decay: float = 0.01,
+        learning_rate: float = 0.001,
+        device_name: str = "cpu",
     ):
-
         self.model_optional_layer_dims = model_optional_layer_dims
 
         super(ESMTrainer, self).__init__(
@@ -89,15 +97,15 @@ class ESMTrainer(Trainer):
             optimizer=optimizer,
             weight_decay=weight_decay,
             learning_rate=learning_rate,
-            device_name=device_name
+            device_name=device_name,
         )
 
         self.loss_fct = nn.MSELoss()
 
     def _create_model(
-            self,
-            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
-            embedding_dim: Optional[int] = None,
+        self,
+        architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
+        embedding_dim: Optional[int] = None,
     ) -> ESM:
         return ESM(architecture=architecture, embedding_dim=embedding_dim)
 
@@ -120,17 +128,20 @@ class ESMTrainer(Trainer):
         return loss.item()
 
     def train_with_embeddings(
-            self,
-            embedding_dataset: EmbeddingDataset,
-            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = 'linear',
-            output_filepath: str = None,
-            num_epochs: int = 10,
-            batch_size: int = 32,
-            verbose: int = 1
+        self,
+        embedding_dataset: EmbeddingDataset,
+        architecture: Optional[
+            Union[str, dict[str, Union[str, tuple[str]]]]
+        ] = "linear",
+        output_filepath: str = None,
+        num_epochs: int = 10,
+        batch_size: int = 32,
+        verbose: int = 1,
     ) -> ESM:
-
         if self.model is None:
-            self.model = self._create_model(architecture=architecture, embedding_dim=embedding_dataset.embedding_dim)
+            self.model = self._create_model(
+                architecture=architecture, embedding_dim=embedding_dataset.embedding_dim
+            )
 
         self.model.to(self.device)
 
@@ -138,33 +149,31 @@ class ESMTrainer(Trainer):
             self.optimizer = self._create_optimizer(model=self.model)
 
         sampler = RandomSampler(embedding_dataset)
-        dataloader = DataLoader(embedding_dataset, sampler=sampler, batch_size=batch_size)
+        dataloader = DataLoader(
+            embedding_dataset, sampler=sampler, batch_size=batch_size
+        )
 
         num_train_steps = len(dataloader) * num_epochs
 
-        self.scheduler = self._create_scheduler(optimizer=self.optimizer, num_train_steps=num_train_steps)
+        self.scheduler = self._create_scheduler(
+            optimizer=self.optimizer, num_train_steps=num_train_steps
+        )
 
         epoch_train_durations = []
         epoch_avg_losses = []
         start_time = time.time()
         with tqdm(
-                range(num_epochs),
-                desc="Training ESM",
-                unit="epoch",
-                disable=verbose < 1
+            range(num_epochs), desc="Training ESM", unit="epoch", disable=verbose < 1
         ) as epoch_pbar:
-
             for epoch_i in epoch_pbar:
-
                 self.reset_loss()
 
                 with tqdm(
-                        dataloader,
-                        desc=f'Training: Epoch {epoch_i} / {num_epochs}',
-                        unit='batch',
-                        disable=verbose < 2
+                    dataloader,
+                    desc=f"Training: Epoch {epoch_i} / {num_epochs}",
+                    unit="batch",
+                    disable=verbose < 2,
                 ) as batch_pbar:
-
                     for batch in batch_pbar:
                         loss = self.train_step(batch)
 
@@ -182,7 +191,7 @@ class ESMTrainer(Trainer):
             esm_num_epochs=num_epochs,
             esm_learning_rate=self.learning_rate,
             esm_weight_decay=self.weight_decay,
-            esm_batch_size=batch_size
+            esm_batch_size=batch_size,
         )
 
         if output_filepath:
@@ -193,33 +202,37 @@ class ESMTrainer(Trainer):
 
             torch.save(self.model.state_dict(), output_filepath)
             train_info_dict = {
-                'training_completed_timestamp': datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
-                'num_epochs': num_epochs,
-                'num_train_examples': len(embedding_dataset),
-                'epoch_train_durations': epoch_train_durations,
-                'epoch_avg_losses': epoch_avg_losses
+                "training_completed_timestamp": datetime.now().strftime(
+                    "%m/%d/%Y, %H:%M:%S"
+                ),
+                "num_epochs": num_epochs,
+                "num_train_examples": len(embedding_dataset),
+                "epoch_train_durations": epoch_train_durations,
+                "epoch_avg_losses": epoch_avg_losses,
             }
 
-            with open(os.path.join(output_dir, 'train_info.json'), 'w') as f:
+            with open(os.path.join(output_dir, "train_info.json"), "w") as f:
                 json.dump(train_info_dict, f)
 
-            print('Saved model.')
+            print("Saved model.")
 
         return self.model
 
     def train_with_models(
-            self,
-            dataset: Dataset,
-            base_model: PreTrainedModel,
-            tuned_model: PreTrainedModel,
-            tokenizer: PreTrainedTokenizer,
-            architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = 'linear',
-            model_output_filepath: Optional[str] = None,
-            embeddings_output_filepath: Optional[str] = None,
-            num_epochs: int = 10,
-            train_batch_size: int = 32,
-            embeddings_batch_size: int = 128,
-            device_name: str = "cpu",
+        self,
+        dataset: Dataset,
+        base_model: PreTrainedModel,
+        tuned_model: PreTrainedModel,
+        tokenizer: PreTrainedTokenizer,
+        architecture: Optional[
+            Union[str, dict[str, Union[str, tuple[str]]]]
+        ] = "linear",
+        model_output_filepath: Optional[str] = None,
+        embeddings_output_filepath: Optional[str] = None,
+        num_epochs: int = 10,
+        train_batch_size: int = 32,
+        embeddings_batch_size: int = 128,
+        device_name: str = "cpu",
     ) -> ESM:
         embedding_dataset = create_embedding_dataset(
             dataset=dataset,
@@ -241,6 +254,8 @@ class ESMTrainer(Trainer):
             batch_size=train_batch_size,
         )
 
-        esm.config.update({**{"base_model_name": base_model.config.name_or_path}, **dataset.metadata})
+        esm.config.update(
+            {**{"base_model_name": base_model.config.name_or_path}, **dataset.metadata}
+        )
 
         return esm

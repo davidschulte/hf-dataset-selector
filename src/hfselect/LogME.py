@@ -13,7 +13,7 @@ def each_evidence(y_, f, fh, v, s, vh, N, D):
     alpha = 1.0
     beta = 1.0
     lam = alpha / beta
-    tmp = (vh @ (f @ np.ascontiguousarray(y_)))
+    tmp = vh @ (f @ np.ascontiguousarray(y_))
     for i in range(100):
         # print(f'{i}/100')
         # should converge after at most 10 steps
@@ -31,12 +31,14 @@ def each_evidence(y_, f, fh, v, s, vh, N, D):
         if np.abs(new_lam - lam) / lam < 0.01:
             break
         lam = new_lam
-    evidence = D / 2.0 * np.log(alpha) \
-               + N / 2.0 * np.log(beta) \
-               - 0.5 * np.sum(np.log(alpha + beta * s)) \
-               - beta / 2.0 * (beta_de + epsilon) \
-               - alpha / 2.0 * (alpha_de + epsilon) \
-               - N / 2.0 * np.log(2 * np.pi)
+    evidence = (
+        D / 2.0 * np.log(alpha)
+        + N / 2.0 * np.log(beta)
+        - 0.5 * np.sum(np.log(alpha + beta * s))
+        - beta / 2.0 * (beta_de + epsilon)
+        - alpha / 2.0 * (alpha_de + epsilon)
+        - N / 2.0 * np.log(2 * np.pi)
+    )
     return evidence / N, alpha, beta, m
 
 
@@ -57,13 +59,15 @@ def truncated_svd(x):
     vh = vh[:k]
     u = u_times_sigma[:, :k] / s.reshape(1, -1)
     return u, s, vh
+
+
 # truncated_svd(np.random.randn(20, 10).astype(np.float64))
 
 
 class LogME(object):
     def __init__(self, regression=False):
         """
-            :param regression: whether regression
+        :param regression: whether regression
         """
         # print('logme')
         self.regression = regression
@@ -91,7 +95,7 @@ class LogME(object):
         evidences = []
         self.num_dim = y.shape[1] if self.regression else int(y.max() + 1)
         for i in range(self.num_dim):
-            print(f'k: {i}')
+            print(f"k: {i}")
             y_ = y[:, i] if self.regression else (y == i).astype(np.float64)
             evidence, alpha, beta, m = each_evidence(y_, f, fh, v, s, vh, N, D)
             evidences.append(evidence)
@@ -108,7 +112,7 @@ class LogME(object):
         at https://arxiv.org/abs/2110.10545
         """
         N, D = f.shape  # k = min(N, D)
-        if N > D: # direct SVD may be expensive
+        if N > D:  # direct SVD may be expensive
             u, s, vh = truncated_svd(f)
         else:
             u, s, vh = np.linalg.svd(f, full_matrices=False)
@@ -116,7 +120,7 @@ class LogME(object):
         # s.shape = k
         # vh.shape = k x D
         s = s.reshape(-1, 1)
-        sigma = (s ** 2)
+        sigma = s**2
 
         evidences = []
         self.num_dim = y.shape[1] if self.regression else int(y.max() + 1)
@@ -125,8 +129,10 @@ class LogME(object):
             y_ = y[:, i] if self.regression else (y == i).astype(np.float64)
             y_ = y_.reshape(-1, 1)
             x = u.T @ y_  # x has shape [k, 1], but actually x should have shape [N, 1]
-            x2 = x ** 2
-            res_x2 = (y_ ** 2).sum() - x2.sum()  # if k < N, we compute sum of xi for 0 singular values directly
+            x2 = x**2
+            res_x2 = (
+                (y_**2).sum() - x2.sum()
+            )  # if k < N, we compute sum of xi for 0 singular values directly
 
             alpha, beta = 1.0, 1.0
             for _ in range(50):
@@ -145,18 +151,22 @@ class LogME(object):
                 #            - alpha / 2.0 * m2 \
                 #            - N / 2.0 * np.log(2 * np.pi)
                 # evidence /= N
-                if abs(t_ - t) / t <= 1e-3:  # abs(t_ - t) <= 1e-5 or abs(1 / t_ - 1 / t) <= 1e-5:
+                if (
+                    abs(t_ - t) / t <= 1e-3
+                ):  # abs(t_ - t) <= 1e-5 or abs(1 / t_ - 1 / t) <= 1e-5:
                     break
 
             # if abs(t_ - t) / t > 1e-3:
             #     print('Not converged!')
 
-            evidence = D / 2.0 * np.log(alpha) \
-                       + N / 2.0 * np.log(beta) \
-                       - 0.5 * np.sum(np.log(alpha + beta * sigma)) \
-                       - beta / 2.0 * res2 \
-                       - alpha / 2.0 * m2 \
-                       - N / 2.0 * np.log(2 * np.pi)
+            evidence = (
+                D / 2.0 * np.log(alpha)
+                + N / 2.0 * np.log(beta)
+                - 0.5 * np.sum(np.log(alpha + beta * sigma))
+                - beta / 2.0 * res2
+                - alpha / 2.0 * m2
+                - N / 2.0 * np.log(2 * np.pi)
+            )
             evidence /= N
             m = 1.0 / (t + sigma) * s * x
             m = (vh.T @ m).reshape(-1)
@@ -180,7 +190,7 @@ class LogME(object):
         :return: LogME score (how well f can fit y directly)
         """
         if self.fitted:
-            warnings.warn('re-fitting for new data. old parameters cleared.')
+            warnings.warn("re-fitting for new data. old parameters cleared.")
             self.reset()
         else:
             self.fitted = True

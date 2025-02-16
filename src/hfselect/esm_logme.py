@@ -21,16 +21,20 @@ class NoESMsFoundError(Exception):
 
 
 def compute_scores(
-        dataset: Dataset,
-        base_model: PreTrainedModel,
-        esms: List[ESM],
-        tokenizer: PreTrainedTokenizer,
-        batch_size: int = 128,
-        device_name: str = "cpu",
+    dataset: Dataset,
+    base_model: PreTrainedModel,
+    esms: List[ESM],
+    tokenizer: PreTrainedTokenizer,
+    batch_size: int = 128,
+    device_name: str = "cpu",
 ) -> list[float]:
     sampler = SequentialSampler(dataset)
-    dataloader = DataLoader(dataset, sampler=sampler, batch_size=batch_size,
-                            collate_fn=lambda x: dataset.collate_fn(x, tokenizer=tokenizer))
+    dataloader = DataLoader(
+        dataset,
+        sampler=sampler,
+        batch_size=batch_size,
+        collate_fn=lambda x: dataset.collate_fn(x, tokenizer=tokenizer),
+    )
     device = torch.device(device_name)
     base_model.to(device)
 
@@ -52,12 +56,16 @@ def compute_scores(
             b_labels = b_labels.detach().cpu().numpy().flatten()
 
             with torch.no_grad():
-                batch_base_embeddings = get_pooled_output(base_model, b_input_ids, b_input_mask)
+                batch_base_embeddings = get_pooled_output(
+                    base_model, b_input_ids, b_input_mask
+                )
                 for i, esm in enumerate(esms):
                     if i in faulty_esm_indices:
                         continue
                     try:
-                        batch_transformed_embeddings = esm(batch_base_embeddings).cpu().numpy()
+                        batch_transformed_embeddings = (
+                            esm(batch_base_embeddings).cpu().numpy()
+                        )
                         esm_embeddings[i].append(batch_transformed_embeddings)
                     except Exception as e:
                         faulty_esm_indices.add(i)
@@ -66,7 +74,9 @@ def compute_scores(
             labels = np.append(labels, b_labels, axis=0)
 
     if len(errors) > 0:
-        logger.warning(f"Computing embeddings failed for {len(faulty_esm_indices)} of {len(esms)} ESMs.")
+        logger.warning(
+            f"Computing embeddings failed for {len(faulty_esm_indices)} of {len(esms)} ESMs."
+        )
         logger.debug(errors)
 
     scores = []
@@ -77,18 +87,21 @@ def compute_scores(
                 continue
 
             embeddings = np.vstack(features)
-            scores.append(LogME(regression=regression).fit(embeddings, labels, add_intercept=False))
+            scores.append(
+                LogME(regression=regression).fit(
+                    embeddings, labels, add_intercept=False
+                )
+            )
 
     return scores
 
 
 def compute_task_ranking(
-        dataset: Dataset,
-        model_name: str,
-        esms: Optional[List[ESM]] = None,
-        esm_repo_ids: Optional[List[str]] = None,
+    dataset: Dataset,
+    model_name: str,
+    esms: Optional[List[ESM]] = None,
+    esm_repo_ids: Optional[List[str]] = None,
 ) -> TaskRanking:
-
     if esms is None:
         if esm_repo_ids is None:
             esm_repo_ids = find_esm_repo_ids(model_name=model_name)
