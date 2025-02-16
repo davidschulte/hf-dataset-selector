@@ -30,7 +30,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
     ):
         super(ESM, self).__init__()
 
-        self.config = config
+        self.config = config or ESMConfig()
         self.architecture = architecture
         self.embedding_dim = embedding_dim
         self.sequential = nn.Sequential(nn.Linear(768, 768))
