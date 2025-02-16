@@ -12,7 +12,7 @@ def _format_text_column_names(text_column: Union[str, tuple]):
 
 
 class InvalidESMConfigError(Exception):
-    default_message = "The Config is not valid ESM Config."
+    default_message = "The Config is not a valid ESM Config. Task ID and base model name need to be specified."
 
     def __init__(self, message: Optional[str] = None):
         super().__init__(message or self.default_message)
@@ -73,9 +73,9 @@ class ESMConfig(PretrainedConfig):
 
 
     @property
-    def is_valid(self):
-        return isinstance(self.base_model_name, str) and self.base_model_name and \
-            isinstance(self.task_id, str) and self.task_id
+    def is_valid(self) -> bool:
+        return self.base_model_name and isinstance(self.base_model_name, str)  and \
+            self.task_id and isinstance(self.task_id, str)
 
     @classmethod
     def from_esm(cls, esm: "ESM"):
