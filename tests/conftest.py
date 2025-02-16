@@ -15,7 +15,7 @@ def imdb_dataset():
         text_col="text",
         label_col="label",
         is_regression=False,
-        num_examples=1000
+        num_examples=1000,
     )
 
 
