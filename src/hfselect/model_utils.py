@@ -1,9 +1,26 @@
 import torch
-from transformers import PreTrainedModel, PreTrainedTokenizer, AutoTokenizer, \
-    BertModel, BertConfig,  BertForSequenceClassification, BertTokenizer,\
-    RobertaModel, RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer,\
-    DistilBertModel, DistilBertConfig, DistilBertForSequenceClassification, DistilBertTokenizer, logging
-from copy import deepcopy
+from transformers import (
+    PreTrainedModel,
+    PreTrainedTokenizer,
+    AutoTokenizer,
+    BertModel,
+    BertConfig,
+    BertForSequenceClassification,
+    BertTokenizer,
+    RobertaModel,
+    RobertaConfig,
+    RobertaForSequenceClassification,
+    RobertaTokenizer,
+    DistilBertModel,
+    DistilBertConfig,
+    DistilBertForSequenceClassification,
+    DistilBertTokenizer,
+    logging
+)
+# PreTrainedModel, PreTrainedTokenizer, AutoTokenizer, \
+#     BertModel, BertConfig,  BertForSequenceClassification, BertTokenizer, \
+#     RobertaModel, RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer, \
+#     DistilBertModel, DistilBertConfig, DistilBertForSequenceClassification, DistilBertTokenizer, logging
 
 SEQUENCE_CLASSIFICATION_MODEL_ARGS = {
     'output_attentions': False,
@@ -116,27 +133,6 @@ def create_tokenizer(model_name):
     pretrained_name = MODELS[model_name]['pretrained_name']
 
     return tokenizer_class.from_pretrained(pretrained_name)
-#
-#
-# def load_sequence_classification_model_from_dir(model_dir, model_name=MODEL_NAME):
-#     sequence_classification_model_class: PreTrainedModel = MODELS[model_name]['sequence_classification_model']
-#
-#     return sequence_classification_model_class.from_pretrained(model_dir)
-#
-#
-# def reset_head_layer(model: PreTrainedModel, num_labels, model_name=MODEL_NAME):
-#     logging.set_verbosity_error()
-#     # model_name = model.base_model_prefix
-#     config_class = MODELS[model_name]['config']
-#     pretrained_name = MODELS[model_name]['pretrained_name']
-#     sequence_classification_model_class = MODELS[model_name]['sequence_classification_model']
-#     base_model_attribute_name = MODELS[model_name]['base_model_attribute_name']
-#     new_model_config = config_class.from_pretrained(pretrained_name, num_labels=num_labels)
-#     new_model = sequence_classification_model_class(new_model_config)
-#     # new_model = sequence_classification_model_class(model.config)
-#     setattr(new_model, base_model_attribute_name, deepcopy(getattr(model, base_model_attribute_name)))
-#
-#     return new_model
 
 
 def get_pooled_output(
@@ -147,9 +143,10 @@ def get_pooled_output(
 
     if isinstance(base_model, BertModel):
         if "sentence-transformers" in base_model.name_or_path:
-            token_embeddings = base_model(input_ids, attention_mask=attention_mask)[0]  # First element of model_output contains all token embeddings
+            token_embeddings = base_model(input_ids, attention_mask=attention_mask)[0]
             input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-            return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
+            return (torch.sum(token_embeddings * input_mask_expanded, 1) /
+                    torch.clamp(input_mask_expanded.sum(1), min=1e-9))
 
         return base_model(input_ids, attention_mask=attention_mask)[1]
 
@@ -161,27 +158,3 @@ def get_pooled_output(
 
     else:
         raise NotImplementedError("Method for getting CLS embeddings is not implemented for this model.")
-
-    # if pooling_method == 'bert_pooling':
-    #     return base_model(input_ids, attention_mask=attention_mask)[1]
-    # elif pooling_method == 'distilbert_pooling':
-    #     return base_model(input_ids, attention_mask=attention_mask)[0][:, 0]
-    # elif pooling_method == 'sbert_pooling':
-    #     token_embeddings = base_model(input_ids, attention_mask=attention_mask)[0]  # First element of model_output contains all token embeddings
-    #     input_mask_expanded = attention_mask.unsqueeze(-1).expand(token_embeddings.size()).float()
-    #     return torch.sum(token_embeddings * input_mask_expanded, 1) / torch.clamp(input_mask_expanded.sum(1), min=1e-9)
-    # elif pooling_method == 'roberta_pooling':
-    #     return base_model(input_ids, attention_mask=attention_mask)[0][:, 0, :]
-    # else:
-    #     raise Exception
-
-    # if isinstance(base_model, BertModel):
-    #     return base_model(input_ids, attention_mask=attention_mask)[1]
-    # elif isinstance(base_model, DistilBertModel):
-    #     return base_model(input_ids, attention_mask=attention_mask)[0][:, 0]
-
-
-# def get_base_model(sequence_classification_model, model_name=MODEL_NAME):
-#     base_model_attribute_name = MODELS[model_name]['base_model_attribute_name']
-#
-#     return getattr(sequence_classification_model, base_model_attribute_name)

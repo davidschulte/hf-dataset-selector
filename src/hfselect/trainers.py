@@ -12,7 +12,7 @@ import time
 import json
 from tqdm import tqdm
 from datetime import datetime
-from torch.utils.data import RandomSampler, SubsetRandomSampler, DataLoader
+from torch.utils.data import RandomSampler, DataLoader
 from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
 from .dataset import Dataset
 import warnings
@@ -76,7 +76,7 @@ class ESMTrainer(Trainer):
     def __init__(
             self,
             model: Optional[nn.Module] = None,
-            model_optional_layer_dims: Optional[List[int]]=None,
+            model_optional_layer_dims: Optional[List[int]] = None,
             optimizer: Optional["torch.optim.Optimizer"] = None,
             weight_decay: float = 0.01,
             learning_rate: float = 0.001,
@@ -173,7 +173,6 @@ class ESMTrainer(Trainer):
 
                         epoch_pbar.set_postfix(avg_train_loss=avg_train_loss)
                         batch_pbar.set_postfix(avg_train_loss=avg_train_loss)
-
 
                 end_time = time.time()
                 epoch_train_durations.append(end_time - start_time)

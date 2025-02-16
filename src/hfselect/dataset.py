@@ -62,7 +62,7 @@ class Dataset(TorchDataset):
         else:
             try:
                 self.label_dim = label_features.num_classes
-            except:
+            except AttributeError:
                 self.label_dim = np.max(self.dataset[label_col]) + 1
             self.class_label = None
 

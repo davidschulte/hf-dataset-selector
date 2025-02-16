@@ -1,8 +1,8 @@
 from typing import Optional
 import numpy as np
 from collections.abc import Sequence
-from collections import defaultdict
 import pandas as pd
+from .ESMConfig import ESMConfig
 
 
 class InvalidTaskRankingError(Exception):
@@ -16,7 +16,7 @@ class TaskRanking(Sequence):
 
     def __init__(
             self,
-            esm_configs: list["ESMConfig"],
+            esm_configs: list[ESMConfig],
             scores: list[float],
             ranks: Optional[list[int]] = None
     ):
@@ -106,4 +106,3 @@ class TaskRanking(Sequence):
             "ESM Architecture": [esm_config.esm_architecture for esm_config in self.esm_configs],
             "Score": self.scores
         }).set_index("Rank")
-

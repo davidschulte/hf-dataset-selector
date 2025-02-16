@@ -96,7 +96,7 @@ def create_embedding_dataset(
             b_input_ids, b_input_mask, _ = batch
 
             with torch.no_grad():
-                base_embeddings_batch = get_pooled_output(base_model,b_input_ids,b_input_mask).cpu().numpy()
+                base_embeddings_batch = get_pooled_output(base_model, b_input_ids, b_input_mask).cpu().numpy()
                 trained_embeddings_batch = get_pooled_output(tuned_model, b_input_ids, b_input_mask).cpu().numpy()
 
             base_embeddings.append(base_embeddings_batch)

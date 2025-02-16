@@ -72,7 +72,7 @@ class ESMConfig(PretrainedConfig):
 
     @property
     def is_valid(self) -> bool:
-        return self.base_model_name and isinstance(self.base_model_name, str)  and \
+        return self.base_model_name and isinstance(self.base_model_name, str) and \
             self.task_id and isinstance(self.task_id, str)
 
     @classmethod
@@ -88,4 +88,3 @@ class ESMConfig(PretrainedConfig):
 
     def get(self, attr_name: str, default_return_val: Any = None) -> Any:
         return self.__dict__.get(attr_name, default_return_val)
-

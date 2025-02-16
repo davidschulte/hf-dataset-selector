@@ -9,10 +9,11 @@ from .dataset import Dataset
 from .task_ranking import TaskRanking
 from .ESMConfig import ESMConfig
 from tqdm.auto import tqdm
-from typing import List, Optional, Union
+from typing import List, Optional
 from collections import defaultdict
 from transformers import AutoModel, AutoTokenizer
 from hfselect import logger
+from .ESM import ESM
 
 
 class NoESMsFoundError(Exception):
@@ -23,7 +24,7 @@ class NoESMsFoundError(Exception):
 def compute_scores(
         dataset: Dataset,
         base_model: PreTrainedModel,
-        esms: List["ESM"],
+        esms: List[ESM],
         tokenizer: PreTrainedTokenizer,
         batch_size: int = 128,
         device_name: str = "cpu",
@@ -85,13 +86,13 @@ def compute_scores(
 def compute_task_ranking(
         dataset: Dataset,
         model_name: str,
-        esms: Optional[List["ESM"]] = None,
+        esms: Optional[List[ESM]] = None,
         esm_repo_ids: Optional[List[str]] = None,
 ) -> TaskRanking:
 
     if esms is None:
         if esm_repo_ids is None:
-           esm_repo_ids = find_esm_repo_ids(model_name=model_name)
+            esm_repo_ids = find_esm_repo_ids(model_name=model_name)
 
         esms = fetch_esms(esm_repo_ids)
 

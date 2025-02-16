@@ -52,6 +52,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
     ) -> None:
         create_repo(repo_id=repo_id, exist_ok=True)
 
+        self.convert_legacy_to_new()
         if config is None:
             config = self.config
 
@@ -96,7 +97,8 @@ class ESM(nn.Module, PyTorchModelHubMixin):
 
         return esm
 
-    def to_disk(self, filepath: str):
+    def to_disk(self, filepath: str) -> None:
+        self.convert_legacy_to_new()
         save_file(self.state_dict(), filepath)
 
     def forward(self, x: torch.Tensor) -> torch.Tensor:
@@ -105,27 +107,33 @@ class ESM(nn.Module, PyTorchModelHubMixin):
 
         return self.model(x)
 
-    def __str__(self):
+    def __str__(self) -> str:
         return self.__repr__()
 
-    def __repr__(self):
+    def __repr__(self) -> str:
         return f"ESM - Task ID: {self.config.get('task_id', 'N/A')} - Subset: {self.config.get('task_subset', 'N/A')}"
 
-    def convert_legacy_to_new(self):
+    def convert_legacy_to_new(self) -> None:
         # Convert legacy ESMs
-        if self.model is None and hasattr(self, "sequential"):
-            self.model = self.sequential
+        if hasattr(self, "sequential"):
+            if self.model is None:
+                self.model = self.sequential
+                if (
+                        isinstance(self.model, nn.Sequential)
+                        and isinstance(self.model[0], nn.Linear)
+                        and len(self.model) == 1
+                ):
+                    self.model = self.model[0]
+
+            if isinstance(self.model, nn.Linear):
+                self.architecture = "linear"
+                self.embedding_dim = self.model.in_features
+
+            else:
+                warnings.warn("Could not determine ESM architecture while loading.")
+
             del self.sequential
-            if isinstance(self.model, nn.Sequential) and isinstance(self.model[0], nn.Linear) and len(self.model) == 1:
-                self.model = self.model[0]
-
-        if isinstance(self.model, nn.Linear):
-            self.architecture = "linear"
-            self.embedding_dim = self.model.in_features
-
-        else:
-            warnings.warn("Could not determine ESM architecture while loading.")
 
     @property
-    def is_initialized(self):
+    def is_initialized(self) -> bool:
         return self.model is not None

@@ -1,6 +1,6 @@
 from tqdm.auto import tqdm
 from typing import Optional
-from huggingface_hub import HfApi, model_info
+from huggingface_hub import HfApi, model_info, ModelInfo
 from collections import defaultdict
 from .ESM import ESM, ESMNotInitializedError
 from .ESMConfig import ESMConfig, InvalidESMConfigError
@@ -12,7 +12,7 @@ def find_esm_repo_ids(model_name: Optional[str], filters: Optional[list[str]] = 
     return [esm_info.id for esm_info in esm_infos]
 
 
-def find_esm_model_infos(model_name: Optional[str], filters: Optional[list[str]] = None) -> list["ModelInfo"]:
+def find_esm_model_infos(model_name: Optional[str], filters: Optional[list[str]] = None) -> list[ModelInfo]:
     hf_api = HfApi()
 
     if filters is None:
@@ -83,7 +83,7 @@ def fetch_esm_configs(
                 errors[type(e).__name__].append(repo_id)
 
     if len(errors) > 0:
-        logger.warning(f"Fetching  ESM configs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs.")
+        logger.warning(f"Fetching ESM configs failed for {sum(map(len, errors.values()))} of {len(repo_ids)} repo IDs.")
         logger.debug(errors)
 
     return esm_configs
