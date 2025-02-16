@@ -49,7 +49,7 @@ def fetch_esms(
                 if not esm.is_initialized:
                     raise ESMNotInitializedError
 
-                if not ESMConfig.from_esm(esm).is_valid:
+                if not esm.create_config().is_valid:
                     raise InvalidESMConfigError
 
                 esms.append(esm)

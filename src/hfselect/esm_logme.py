@@ -110,4 +110,4 @@ def compute_task_ranking(
         esms=esms,
     )
 
-    return TaskRanking([ESMConfig.from_esm(esm) for esm in esms], scores)
+    return TaskRanking([esm.create_config() for esm in esms], scores)

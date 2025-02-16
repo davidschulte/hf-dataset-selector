@@ -75,10 +75,6 @@ class ESMConfig(PretrainedConfig):
         return self.base_model_name and isinstance(self.base_model_name, str) and \
             self.task_id and isinstance(self.task_id, str)
 
-    @classmethod
-    def from_esm(cls, esm: "ESM"):
-        return ESMConfig(**esm.config)
-
     def __str__(self) -> str:
         return (
             f"ESMConfig Task ID: {self.task_id:<50} Task Subset: {self.task_id:<50} Task Split: {self.task_split:<10}"
