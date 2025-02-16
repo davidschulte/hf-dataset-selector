@@ -1,4 +1,4 @@
-from typing import List, Optional, Union
+from typing import Optional
 import numpy as np
 from collections.abc import Sequence
 from collections import defaultdict
@@ -16,9 +16,9 @@ class TaskRanking(Sequence):
 
     def __init__(
             self,
-            esm_configs: Union["ESMConfig", List["ESMConfig"]],
-            scores: Union[float, List[float]],
-            ranks: Optional[Union[int, List[int]]] = None
+            esm_configs: list["ESMConfig"],
+            scores: list[float],
+            ranks: Optional[list[int]] = None
     ):
 
         self.esm_configs = esm_configs
@@ -32,11 +32,7 @@ class TaskRanking(Sequence):
     def __getitem__(self, index):
 
         if isinstance(index, int):
-            return TaskRanking(
-                self.esm_configs[index],
-                self.scores[index],
-                self.ranks[index]
-            )
+            return TaskRanking([self.esm_configs[index]], [self.scores[index]], [self.ranks[index]])
 
         elif isinstance(index, slice):
             return TaskRanking(self.esm_configs[index], self.scores[index], self.ranks[index])
