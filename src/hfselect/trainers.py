@@ -122,7 +122,7 @@ class ESMTrainer(Trainer):
 
     def train_with_embeddings(
             self,
-            embeddings_dataset: EmbeddingDataset,
+            embedding_dataset: EmbeddingDataset,
             architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = 'linear',
             output_filepath: str = None,
             num_epochs: int = 10,
@@ -130,15 +130,15 @@ class ESMTrainer(Trainer):
     ) -> ESM:
 
         if self.model is None:
-            self.model = self._create_model(architecture=architecture, embedding_dim=embeddings_dataset.embedding_dim)
+            self.model = self._create_model(architecture=architecture, embedding_dim=embedding_dataset.embedding_dim)
 
         self.model.to(self.device)
 
         if self.optimizer is None:
             self.optimizer = self._create_optimizer(model=self.model)
 
-        sampler = RandomSampler(embeddings_dataset)
-        dataloader = DataLoader(embeddings_dataset, sampler=sampler, batch_size=batch_size)
+        sampler = RandomSampler(embedding_dataset)
+        dataloader = DataLoader(embedding_dataset, sampler=sampler, batch_size=batch_size)
 
         num_train_steps = len(dataloader) * num_epochs
 
@@ -175,7 +175,7 @@ class ESMTrainer(Trainer):
             train_info_dict = {
                 'training_completed_timestamp': datetime.now().strftime("%m/%d/%Y, %H:%M:%S"),
                 'num_epochs': num_epochs,
-                'num_train_examples': len(embeddings_dataset),
+                'num_train_examples': len(embedding_dataset),
                 'epoch_train_durations': epoch_train_durations,
                 'epoch_avg_losses': epoch_avg_losses
             }
@@ -201,7 +201,7 @@ class ESMTrainer(Trainer):
             embeddings_batch_size: int = 128,
             device_name: str = "cpu",
     ) -> ESM:
-        embeddings_dataset = create_embedding_dataset(
+        embedding_dataset = create_embedding_dataset(
             dataset=dataset,
             base_model=base_model,
             tuned_model=tuned_model,
@@ -211,10 +211,10 @@ class ESMTrainer(Trainer):
         )
 
         if embeddings_output_filepath:
-            embeddings_dataset.save(embeddings_output_filepath)
+            embedding_dataset.save(embeddings_output_filepath)
 
         esm = self.train_with_embeddings(
-            embeddings_dataset=embeddings_dataset,
+            embedding_dataset=embedding_dataset,
             architecture=architecture,
             output_filepath=model_output_filepath,
             num_epochs=num_epochs,
