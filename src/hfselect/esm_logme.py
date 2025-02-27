@@ -101,6 +101,8 @@ def compute_task_ranking(
     model_name: str,
     esms: Optional[List[ESM]] = None,
     esm_repo_ids: Optional[List[str]] = None,
+    batch_size: int = 128,
+    device_name: str = "cpu",
 ) -> TaskRanking:
     if esms is None:
         if esm_repo_ids is None:
