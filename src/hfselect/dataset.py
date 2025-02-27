@@ -12,7 +12,10 @@ TEXT_SEPARATOR = " [SEP] "
 
 
 class EmptyDatasetError(Exception):
-    pass
+    default_message = "The dataset is empty."
+
+    def __init__(self, message: Optional[str] = None):
+        super().__init__(message or self.default_message)
 
 
 def gen_from_iterable_dataset(iterable_ds):
@@ -43,7 +46,7 @@ class Dataset(TorchDataset):
         self.dataset_len = len(self.dataset)
 
         if self.dataset_len == 0:
-            raise EmptyDatasetError("Dataset is empty.")
+            raise EmptyDatasetError
 
         label_features = self.dataset.features[label_col]
 
