@@ -94,7 +94,7 @@ We provide tutorials for finding intermediate datasets, and for training your ow
 - [Tutorial 4: Advanced ESM training with hyper-parameter optimization](tutorials/04_advanced_esm_training.ipynb)
 
 ## Documentation
-We host a documentation on Read the Docs.
+We host a [documentation on Read the Docs](https://hf-dataset-selector.readthedocs.io/en/latest/).
 
 ## How to cite
 

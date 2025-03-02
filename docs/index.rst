@@ -6,10 +6,10 @@
 hf-dataset-selector documentation
 =================================
 
+A convenient and fast Python package to find the best datasets for intermediate fine-tuning for your task.
 
-Add your content using ``reStructuredText`` syntax. See the
-`reStructuredText <https://www.sphinx-doc.org/en/master/usage/restructuredtext/index.html>`_
-documentation for details.
+
+For an overview about the package, please visit its `official Github repository <https://github.com/davidschulte/hf-dataset-selector>`_.
 
 
 .. toctree::
