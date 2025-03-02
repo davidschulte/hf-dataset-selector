@@ -6,7 +6,7 @@ from huggingface_hub import PyTorchModelHubMixin, create_repo, ModelCard, ModelC
 import os
 import warnings
 from hfselect import logger
-from .ESMConfig import ESMConfig, InvalidESMConfigError
+from .esmconfig import ESMConfig, InvalidESMConfigError
 
 
 class ESMNotInitializedError(Exception):

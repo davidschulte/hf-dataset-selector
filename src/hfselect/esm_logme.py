@@ -1,5 +1,5 @@
 from torch.utils.data import SequentialSampler, DataLoader
-from .LogME import LogME
+from .logme import LogME
 import numpy as np
 import torch
 from .model_utils import get_pooled_output
@@ -12,7 +12,7 @@ from typing import List, Optional
 from collections import defaultdict
 from transformers import AutoModel, AutoTokenizer
 from hfselect import logger
-from .ESM import ESM
+from .esm import ESM
 
 
 class NoESMsFoundError(Exception):

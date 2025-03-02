@@ -1,6 +1,6 @@
 from abc import ABC, abstractmethod
-from .ESM import ESM
-from .ESMConfig import ESMConfig
+from .esm import ESM
+from .esmconfig import ESMConfig
 from transformers import (
     get_linear_schedule_with_warmup,
     PreTrainedModel,

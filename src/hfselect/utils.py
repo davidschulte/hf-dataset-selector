@@ -2,8 +2,8 @@ from tqdm.auto import tqdm
 from typing import Optional
 from huggingface_hub import HfApi, model_info, ModelInfo
 from collections import defaultdict
-from .ESM import ESM, ESMNotInitializedError
-from .ESMConfig import ESMConfig, InvalidESMConfigError
+from .esm import ESM, ESMNotInitializedError
+from .esmconfig import ESMConfig, InvalidESMConfigError
 from hfselect import logger
 
 

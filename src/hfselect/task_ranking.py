@@ -2,7 +2,7 @@ from typing import Optional
 import numpy as np
 from collections.abc import Sequence
 import pandas as pd
-from .ESMConfig import ESMConfig
+from .esmconfig import ESMConfig
 
 
 class InvalidTaskRankingError(Exception):
