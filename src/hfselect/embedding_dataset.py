@@ -5,7 +5,7 @@ from transformers import PreTrainedModel, PreTrainedTokenizer
 from torch.utils.data import SequentialSampler, DataLoader
 import os
 from typing import Optional, Union, List, Iterable
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from .model_utils import get_pooled_output
 import torch
 import warnings
