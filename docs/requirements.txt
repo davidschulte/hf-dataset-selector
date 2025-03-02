@@ -7,3 +7,4 @@ sphinxcontrib-jquery==4.1
 sphinxcontrib-jsmath @ file:///home/ktietz/src/ci/sphinxcontrib-jsmath_1611920942228/work
 sphinxcontrib-qthelp==2.0.0
 sphinxcontrib-serializinghtml==2.0.0
+sphinx_rtd_theme==3.0.2
