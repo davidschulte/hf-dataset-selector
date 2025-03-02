@@ -10,6 +10,16 @@ from hfselect import logger
 def find_esm_repo_ids(
     model_name: Optional[str], filters: Optional[list[str]] = None
 ) -> list[str]:
+    """
+    Finds all ESM repo IDs for the specified language model name and filters
+
+    Args:
+        model_name: The name of the base language model
+        filters: Filters for selecting ESMs (see hf_api.list_models)
+
+    Returns:
+        A list of ESM repo IDs
+    """
     esm_infos = find_esm_model_infos(model_name, filters=filters)
     return [esm_info.id for esm_info in esm_infos]
 
@@ -17,6 +27,16 @@ def find_esm_repo_ids(
 def find_esm_model_infos(
     model_name: Optional[str], filters: Optional[list[str]] = None
 ) -> list[ModelInfo]:
+    """
+    Finds HF ModelInfos for all ESMs specified by the language model name and filters
+
+    Args:
+        model_name: The name of the base language model
+        filters: Filters for selecting ESMs (see hf_api.list_models)
+
+    Returns:
+        A list of ESM ModelInfos
+    """
     hf_api = HfApi()
 
     if filters is None:
@@ -27,13 +47,10 @@ def find_esm_model_infos(
     filters.append("embedding_space_map")
 
     if model_name:
-        """
-        Make sure that the possibly redirected repo name is used,
-        e.g. google-bert/bert-base-uncased instead of bert-base-uncased
-        """
+        # Make sure that the possibly redirected repo name is used,
+        # e.g. google-bert/bert-base-uncased instead of bert-base-uncased
         model_name = model_info(model_name).id
 
-        # filters.append(f"BaseLM:{model_name}")
         filters.append(f"base_model:{model_name}")
 
     return list(hf_api.list_models(filter=filters))
@@ -42,6 +59,15 @@ def find_esm_model_infos(
 def fetch_esms(
     repo_ids: list[str],
 ) -> list[ESM]:
+    """
+    Fetches ESMs by their repo IDs. Invalid ESMs are excluded from the results. This can be seen in the logs.
+
+    Args:
+        repo_ids: The HF repo IDs of the ESMs
+
+    Returns:
+        A list of ESMs
+    """
     esms = []
     errors = defaultdict(list)
     with tqdm(repo_ids, desc="Fetching ESMs", unit="ESM") as pbar:
@@ -74,6 +100,15 @@ def fetch_esms(
 def fetch_esm_configs(
     repo_ids: list[str],
 ) -> list[ESMConfig]:
+    """
+    Fetches ESMConfigs by their repo IDs. Invalid ESMConfigs are excluded from the results. This can be seen in the logs.
+
+    Args:
+        repo_ids: The HF repo IDs of the ESMs
+
+    Returns:
+        A list of ESMConfigs
+    """
     esm_configs = []
     errors = defaultdict(list)
     with tqdm(repo_ids, desc="Fetching ESM Configs", unit="ESM Config") as pbar:

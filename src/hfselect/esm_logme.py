@@ -28,6 +28,20 @@ def compute_scores(
     batch_size: int = 128,
     device_name: str = "cpu",
 ) -> list[float]:
+    """
+    Computes the ESM-LogME scores for all ESMs.
+
+    Args:
+        dataset: The target dataset
+        base_model: The base LM used for computing embeddings
+        esms: List of the ESMs representing the intermediate datasets
+        tokenizer: The tokenizer used for tokenizing the target texts
+        batch_size: Describes how many embeddings are computed and transformed in a batch
+        device_name: The device name of the device for computation (e.g. "cpu", "cuda")
+
+    Returns:
+        scores: The ESM-LogME scores produced by the ESMs
+    """
     sampler = SequentialSampler(dataset)
     dataloader = DataLoader(
         dataset,
@@ -104,6 +118,21 @@ def compute_task_ranking(
     batch_size: int = 128,
     device_name: str = "cpu",
 ) -> TaskRanking:
+    """
+    Computes a task ranking by first computing scores and then ranking the intermediate datasets by their scores.
+
+    Args:
+        dataset: The target dataset
+        model_name: The name of the base LM used for computing embeddings
+        esms: List of the ESMs representing the intermediate datasets
+        esm_repo_ids: List of the HF repo IDs of the ESMs representing the intermediate datasets
+        batch_size: Describes how many embeddings are computed and transformed in a batch
+        device_name: The device name of the device for computation (e.g. "cpu", "cuda")
+
+    Returns:
+        task_ranking: A task ranking of the intermediate tasks. Intermediate datasets with invalid ESMS are excluded.
+
+    """
     if esms is None:
         if esm_repo_ids is None:
             esm_repo_ids = find_esm_repo_ids(model_name=model_name)
@@ -122,6 +151,8 @@ def compute_task_ranking(
         base_model=bert_model,
         tokenizer=tokenizer,
         esms=esms,
+        batch_size=batch_size,
+        device_name=device_name
     )
 
     return TaskRanking([esm.create_config() for esm in esms], scores)

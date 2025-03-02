@@ -6,6 +6,10 @@ from .ESMConfig import ESMConfig
 
 
 class InvalidTaskRankingError(Exception):
+    """
+    An Exception raised when the task ranking contains an error
+    """
+
     default_message = "The task ranking is invalid."
 
     def __init__(self, message: Optional[str] = None):
@@ -13,19 +17,30 @@ class InvalidTaskRankingError(Exception):
 
 
 class TaskRanking(Sequence):
+    """
+    A task ranking contains the esm configs of ranked ESMS, their scores and their ranks
+    """
     def __init__(
         self,
         esm_configs: list[ESMConfig],
         scores: list[float],
         ranks: Optional[list[int]] = None,
     ):
+        """
+        Creates a new task ranking
+
+        Args:
+            esm_configs: The ESMConfigs of the ESMs that are ranked
+            scores: The ESM-LogME score of the ESMs / their datasets
+            ranks: The ranks of the ranking (advised to not change)
+        """
         self.esm_configs = esm_configs
         self.scores = scores
         self.ranks = ranks
 
         self._remove_faulty_scores()
-        self.check_validity()
-        self.sort()
+        self._check_validity()
+        self._sort()
 
     def __getitem__(self, index):
         if isinstance(index, int):
@@ -61,7 +76,7 @@ class TaskRanking(Sequence):
 
         return output_lines
 
-    def sort(self):
+    def _sort(self):
         sorting_order = np.argsort(self.scores)[::-1]
         self.esm_configs = [self.esm_configs[idx] for idx in sorting_order]
         self.scores = [self.scores[idx] for idx in sorting_order]
@@ -88,7 +103,7 @@ class TaskRanking(Sequence):
 
         return [elem for idx, elem in enumerate(list_to_clean) if idx not in indices]
 
-    def check_validity(self):
+    def _check_validity(self):
         if len(self.esm_configs) != len(self.scores):
             raise InvalidTaskRankingError(
                 f"Task ranking contains {len(self.esm_configs)} ESM configs but {len(self.scores)} scores."
@@ -103,6 +118,12 @@ class TaskRanking(Sequence):
             raise InvalidTaskRankingError("Task ranking is empty.")
 
     def to_pandas(self) -> pd.DataFrame:
+        """
+        Creates a Pandas DataFrame of the ranking
+
+        Returns:
+            The resulting dataframe
+        """
         return pd.DataFrame.from_dict(
             {
                 "Rank": self.ranks,

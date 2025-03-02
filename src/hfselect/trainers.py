@@ -1,4 +1,4 @@
-from abc import abstractmethod
+from abc import ABC, abstractmethod
 from .ESM import ESM
 from .ESMConfig import ESMConfig
 from transformers import (
@@ -10,10 +10,10 @@ import torch
 from torch import nn
 from torch.optim import AdamW
 import os
-from typing import Optional, List, Tuple, Union
+from typing import Optional, Tuple, Union
 import time
 import json
-from tqdm import tqdm
+from tqdm.auto import tqdm
 from datetime import datetime
 from torch.utils.data import RandomSampler, DataLoader
 from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
@@ -21,7 +21,10 @@ from .dataset import Dataset
 import warnings
 
 
-class Trainer:
+class Trainer(ABC):
+    """
+    A abstract trainer class
+    """
     def __init__(
         self,
         model: Optional[nn.Module] = None,
@@ -51,7 +54,7 @@ class Trainer:
         self.num_train_examples = 0
 
     @abstractmethod
-    def train_step(self, *args, **kwargs):
+    def _train_step(self, *args, **kwargs):
         pass
 
     @abstractmethod
@@ -72,25 +75,48 @@ class Trainer:
         )
 
     def reset_loss(self):
+        """
+        Resets the loss for optimization.
+
+        Returns:
+
+        """
         self.total_loss = 0
         self.num_train_examples = 0
 
     @property
     def avg_loss(self):
+        """
+        The average loss per training example
+
+        Returns:
+            The average loss per training example
+        """
         return self.total_loss / self.num_train_examples
 
 
 class ESMTrainer(Trainer):
+    """
+    A trainer class that fabricates ESMs
+    """
     def __init__(
         self,
         model: Optional[nn.Module] = None,
-        model_optional_layer_dims: Optional[List[int]] = None,
         optimizer: Optional["torch.optim.Optimizer"] = None,
         weight_decay: float = 0.01,
         learning_rate: float = 0.001,
         device_name: str = "cpu",
     ):
-        self.model_optional_layer_dims = model_optional_layer_dims
+        """
+        Creates an ESMTrainer
+
+        Args:
+            model: The underlying model to be used in the ESM
+            optimizer: The optimizer for training the ESM
+            weight_decay: The weight decay for training the ESM
+            learning_rate: The learning rate for training the ESM
+            device_name: The device name of the device for computation (e.g. "cpu", "cuda")
+        """
 
         super(ESMTrainer, self).__init__(
             model=model,
@@ -107,9 +133,11 @@ class ESMTrainer(Trainer):
         architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
         embedding_dim: Optional[int] = None,
     ) -> ESM:
+        # Creates a new ESM
         return ESM(architecture=architecture, embedding_dim=embedding_dim)
 
-    def train_step(self, embeddings_batch: Tuple[torch.Tensor, torch.Tensor]) -> float:
+    def _train_step(self, embeddings_batch: Tuple[torch.Tensor, torch.Tensor]) -> float:
+        # One train step for one batch
         self.model.train()
 
         embeddings_batch = tuple(b.to(self.device) for b in embeddings_batch)
@@ -138,6 +166,20 @@ class ESMTrainer(Trainer):
         batch_size: int = 32,
         verbose: int = 1,
     ) -> ESM:
+        """
+        Trains an ESM using an EmbeddingDataset dataset. The ESM is fitted to the embedding pairs in the dataset.
+
+        Args:
+            embedding_dataset: The embeddings of the same dataset embedded by a base model and a fine-tuned model
+            architecture: The desired architecture of the ESM
+            output_filepath: If this filepath is specified, the ESM will be saved locally after training
+            num_epochs: The number of epochs for training the ESM
+            batch_size: The batch size for training the ESM
+            verbose: 0 hides everything, 1 shows the complete training of the ESM, and 2 shows the ESM training epochs.
+
+        Returns:
+            The resulting ESM
+        """
         if self.model is None:
             self.model = self._create_model(
                 architecture=architecture, embedding_dim=embedding_dataset.embedding_dim
@@ -175,7 +217,7 @@ class ESMTrainer(Trainer):
                     disable=verbose < 2,
                 ) as batch_pbar:
                     for batch in batch_pbar:
-                        loss = self.train_step(batch)
+                        loss = self._train_step(batch)
 
                         avg_train_loss = loss / batch_size
 
@@ -235,6 +277,27 @@ class ESMTrainer(Trainer):
         embeddings_batch_size: int = 128,
         device_name: str = "cpu",
     ) -> ESM:
+        """
+        Trains an ESM using a dataset, a base language model and a fine-tuned language model.
+        Internally, an EmbeddingDataset is created. Following this, the train_with_embeddings is called
+        and the ESM is fitted to the embedding pairs in the dataset.
+
+        Args:
+            dataset: The dataset used for fine-tuning the language model
+            base_model: The base language model
+            tuned_model: The fine-tuned language model
+            tokenizer: The tokenizer for processing input texts
+            architecture: The desired architecture of the ESM
+            model_output_filepath: If this filepath is specified, the ESM will be saved locally after training
+            embeddings_output_filepath: If this filepath is specified, the EmbeddingDataset will be saved locally
+            num_epochs: The number of epochs for training the ESM
+            train_batch_size: The batch size for training the ESM
+            embeddings_batch_size: The batch size for creating the EmbeddingDataset
+            device_name: The device name of the device for computation (e.g. "cpu", "cuda")
+
+        Returns:
+            The resulting ESM
+        """
         embedding_dataset = create_embedding_dataset(
             dataset=dataset,
             base_model=base_model,

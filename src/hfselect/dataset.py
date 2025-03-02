@@ -12,17 +12,20 @@ TEXT_SEPARATOR = " [SEP] "
 
 
 class EmptyDatasetError(Exception):
+    """
+    EmptyDatasetError are raised when a dataset is empty (possibly after filtering).
+    """
     default_message = "The dataset is empty."
 
     def __init__(self, message: Optional[str] = None):
         super().__init__(message or self.default_message)
 
 
-def gen_from_iterable_dataset(iterable_ds):
+def _gen_from_iterable_dataset(iterable_ds):
     yield from iterable_ds
 
 
-def concat_columns(inputs, column_list: tuple):
+def _concat_columns(inputs, column_list: tuple):
     if isinstance(inputs, str):
         return TEXT_SEPARATOR.join([inputs[col] for col in column_list])
 
@@ -30,6 +33,9 @@ def concat_columns(inputs, column_list: tuple):
 
 
 class Dataset(TorchDataset):
+    """
+    This custom dataset contains an internal dataset, metadata and instructions about processing the data
+    """
     def __init__(
         self,
         dataset: Union[HFDataset, IterableDataset],
@@ -38,6 +44,16 @@ class Dataset(TorchDataset):
         is_regression: bool,
         metadata: Optional[dict] = None,
     ):
+        """
+        Creates a dataset
+
+        Args:
+            dataset: The underlying HF dataset
+            text_col: The name of the text column(s). This can be a tuple of columns to be concatenated.
+            label_col: The name of the label column
+            is_regression: A flag that signals if the underlying task is a regression task
+            metadata: Optional metadata that will be included in the model card of an ESM trained on it
+        """
         self.dataset = dataset
         self.text_col = text_col
         self.label_col = label_col
@@ -85,6 +101,23 @@ class Dataset(TorchDataset):
         seed: Optional[int] = None,
         streaming: bool = False,
     ) -> "Dataset":
+        """
+        Loads an underlying HF dataset and creates the dataset wrapper class around it
+
+        Args:
+            name: The repo ID of the HF dataset
+            split: The split of the HF dataset
+            text_col: The text column  of the HF dataset. This can be a tuple of columns to be concatenated.
+            label_col: The label column  of the HF dataset
+            is_regression: A flag that signals if the underlying task is a regression task
+            subset: The subset of the dataset on HF
+            num_examples: Number of tutorials to sample. If this is None, the whole dataset is used.
+            seed: The random state for sampling tutorials
+            streaming: Whether to use the option for streaming datasets from HF
+
+        Returns:
+            A dataset class with the specified underlying HF dataset
+        """
         if subset is None:
             dataset = load_dataset(name, split=split, streaming=streaming)
         else:
@@ -107,7 +140,7 @@ class Dataset(TorchDataset):
                     seed=seed, buffer_size=DATASET_STREAMING_BUFFER_SIZE
                 ).take(num_examples)
                 dataset = HFDataset.from_generator(
-                    partial(gen_from_iterable_dataset, dataset),
+                    partial(_gen_from_iterable_dataset, dataset),
                     features=dataset.features,
                 )
             else:
@@ -117,7 +150,7 @@ class Dataset(TorchDataset):
         else:
             if streaming:
                 dataset = HFDataset.from_generator(
-                    partial(gen_from_iterable_dataset, dataset),
+                    partial(_gen_from_iterable_dataset, dataset),
                     features=dataset.features,
                 )
 
@@ -147,10 +180,29 @@ class Dataset(TorchDataset):
         return self.dataset_len
 
     def save(self, filepath) -> None:
+        """
+        Locally saves the dataset
+
+        Args:
+            filepath: Filepath for the dataset
+
+        Returns:
+
+        """
         torch.save(self, filepath)
 
     @classmethod
     def from_disk(cls, filepath) -> Union["Dataset", None]:
+        """
+        Loads the dataset from local filepath
+
+        Args:
+            filepath: Filepath for the dataset
+
+        Returns:
+            The loaded dataset
+
+        """
         return torch.load(filepath)
 
     def collate_fn(
@@ -160,6 +212,18 @@ class Dataset(TorchDataset):
         max_length: int = 128,
         return_token_type_ids: bool = False,
     ):
+        """
+        The collate function for pre-processing and tokenizing the data
+
+        Args:
+            rows: The dataset rows (usually a batch)
+            tokenizer: The tokenizer to be used
+            max_length: The maximum length of one input text. Longer texts are truncated.
+            return_token_type_ids: Whether to return token type IDs
+
+        Returns:
+
+        """
         texts = self._preprocess_texts(rows)
         labels = self._preprocess_labels(rows)
 
@@ -187,7 +251,7 @@ class Dataset(TorchDataset):
 
     def _preprocess_texts(self, rows):
         if isinstance(self.text_col, (list, tuple)):
-            inputs = concat_columns(rows, self.text_col)
+            inputs = _concat_columns(rows, self.text_col)
         else:
             inputs = [row[self.text_col] for row in rows]
 

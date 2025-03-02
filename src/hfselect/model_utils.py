@@ -111,36 +111,20 @@ MODELS = {
 }
 
 
-def create_base_model(model_name):
-    logging.set_verbosity_error()
-    base_model_class: PreTrainedModel = MODELS[model_name]["base_model"]
-    pretrained_name = MODELS[model_name]["pretrained_name"]
-
-    return base_model_class.from_pretrained(pretrained_name)
-
-
-# def create_sequence_classification_model(num_labels, model_name=MODEL_NAME):
-#     logging.set_verbosity_error()
-#     sequence_classification_model_class: PreTrainedModel = MODELS[model_name]['sequence_classification_model']
-#     pretrained_name = MODELS[model_name]['pretrained_name']
-#
-#     return sequence_classification_model_class.from_pretrained(pretrained_name,
-#                                                                num_labels=num_labels,
-#                                                                **SEQUENCE_CLASSIFICATION_MODEL_ARGS)
-
-
-def create_tokenizer(model_name):
-    tokenizer_class: PreTrainedTokenizer = MODELS[model_name]["tokenizer"]
-    pretrained_name = MODELS[model_name]["pretrained_name"]
-
-    return tokenizer_class.from_pretrained(pretrained_name)
-
-
 def get_pooled_output(
     base_model: PreTrainedModel, input_ids: torch.Tensor, attention_mask: torch.Tensor
 ):
-    # pooling_method = MODELS[MODEL_NAME]['pooling_method']
+    """
+    Embeds texts using a language model
 
+    Args:
+        base_model: The language model
+        input_ids: The input IDs of the texts (after tokenization)
+        attention_mask: The attention masks of the texts (after tokenization)
+
+    Returns:
+        The embeddings of the texts
+    """
     if isinstance(base_model, BertModel):
         if "sentence-transformers" in base_model.name_or_path:
             token_embeddings = base_model(input_ids, attention_mask=attention_mask)[0]

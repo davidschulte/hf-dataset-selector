@@ -12,14 +12,30 @@ import warnings
 
 
 class InvalidEmbeddingDatasetError(Exception):
+    """
+    This error should be raised when an embedding dataset is invalid.
+    """
+
     def __init__(self, message: str):
         super().__init__(message)
 
 
 class EmbeddingDataset(TorchDataset):
+    """
+    And EmbeddingDataset contains two sets of embeddings:
+    A dataset embedded using a base model and the same dataset embedded by a fine-tuned model.
+    It can be used to train an ESM on the transformation of the embedding space caused by fine-tuning the model.
+    """
     def __init__(
         self, x: Union[np.array, List[np.array]], y: Union[np.array, List[np.array]], metadata: Optional[dict] = None
     ):
+        """
+        Creates an embedding dataset from two sets of embeddings
+
+        Args:
+            x: The embeddings before fine-tuning
+            y: The embeddings after fine-tuning
+        """
         if isinstance(x, list):
             x = np.vstack(x)
         if isinstance(y, list):
@@ -43,7 +59,15 @@ class EmbeddingDataset(TorchDataset):
 
     @classmethod
     def from_disk(cls, filepath: str):
-        embeddings = np.load(filepath)
+        """
+        Loads an EmbeddingDataset from a local file
+
+        Args:
+            filepath: Filepath of the saved EmbeddingDataset
+
+        Returns:
+            The loaded EmbeddingDataset
+        """
         embeddings = np.load(filepath, allow_pickle=True)
         x = embeddings["x"]
         y = embeddings["y"]
@@ -52,9 +76,18 @@ class EmbeddingDataset(TorchDataset):
         else:
             metadata = None
 
-        return EmbeddingDataset(x, y)
+        return EmbeddingDataset(x, y, metadata=metadata)
 
     def save(self, filepath: str) -> None:
+        """
+        Saves an EmbeddingDataset to a local file
+
+        Args:
+            filepath: Filepath to save the embedding
+
+        Returns:
+
+        """
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
         np.savez(filepath, x=self.x, y=self.y, metadata=np.array(self.metadata))
 
@@ -78,6 +111,21 @@ def create_embedding_dataset(
     output_path: Optional[str] = None,
     batch_size: int = 128,
 ) -> EmbeddingDataset:
+    """
+    Creates an EmbeddingDataset by embedding the same dataset with a base model and fine-tuned model
+
+    Args:
+        dataset: The dataset to be embedded
+        base_model: The base model
+        tuned_model: The fine-tuned model
+        tokenizer: The tokenizer to be used
+        device_name: The device name of the device for computation (e.g. "cpu", "cuda")
+        output_path: If an output path is passed here, the EmbeddingDataset will be saved
+        batch_size: The batch size for embedding the dataset
+
+    Returns:
+        The resulting EmbeddingDataset
+    """
     device = torch.device(device_name)
 
     base_model.to(device)
