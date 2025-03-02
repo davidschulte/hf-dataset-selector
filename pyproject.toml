@@ -7,17 +7,23 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hf-dataset-selector"
-version = "0.1.0"
+version = "0.2.0"
 description = "A convenient and fast Python package to find the best datasets for intermediate fine-tuning for your task."
+authors = [{name = "David Schulte", email = "davidsiriusschulte@gmail.com"}]
 readme = "README.md"
+license = {file = "LICENSE"}
 requires-python = ">=3.11"
 dependencies = [
     "datasets>=3.2.0",
     "huggingface-hub>=0.27.0",
     "numba>=0.60.0",
     "numpy>=2.0.2",
+    "pandas>=2.2.3",
     "scipy>=1.15.0",
     "torch>=2.5.1",
     "tqdm>=4.67.1",
     "transformers>=4.47.1",
 ]
+
+[tool.setuptools.exclude-package-data]
+mypackage = ["tests/*"]
