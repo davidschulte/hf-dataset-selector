@@ -276,13 +276,14 @@ http = [
 
 [[package]]
 name = "hf-dataset-selector"
-version = "0.1.0"
-source = { virtual = "." }
+version = "0.2.0"
+source = { editable = "." }
 dependencies = [
     { name = "datasets" },
     { name = "huggingface-hub" },
     { name = "numba" },
     { name = "numpy" },
+    { name = "pandas" },
     { name = "scipy" },
     { name = "torch" },
     { name = "tqdm" },
@@ -295,6 +296,7 @@ requires-dist = [
     { name = "huggingface-hub", specifier = ">=0.27.0" },
     { name = "numba", specifier = ">=0.60.0" },
     { name = "numpy", specifier = ">=2.0.2" },
+    { name = "pandas", specifier = ">=2.2.3" },
     { name = "scipy", specifier = ">=1.15.0" },
     { name = "torch", specifier = ">=2.5.1" },
     { name = "tqdm", specifier = ">=4.67.1" },
