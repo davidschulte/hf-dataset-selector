@@ -35,6 +35,7 @@ class EmbeddingDataset(TorchDataset):
         Args:
             x: The embeddings before fine-tuning
             y: The embeddings after fine-tuning
+            metadata: The metadata will be forwarded to the ESMConfig when an ESM is trained using the embeddings
         """
         if isinstance(x, list):
             x = np.vstack(x)
