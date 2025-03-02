@@ -20,11 +20,11 @@ hf-dataset-selector only ranks datasets with a corresponding ESM on the Hugging 
 
 
 ### What are Embedding Space Maps?
-<img align="right" height="256px" width="256px" src="esm_illustration.png" />
 
 Embedding Space Maps (ESMs) are neural networks that approximate the effect of fine-tuning a language model on a task. They can be used to quickly transform embeddings from a base model to approximate how a fine-tuned model would embed the the input text.
 ESMs can be used for intermediate task selection with the ESM-LogME workflow.
 
+<img src="esm_illustration.png" width="256" height="256" />
 
 
 ## How to install
