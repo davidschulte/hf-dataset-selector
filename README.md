@@ -1,7 +1,17 @@
-# hf-dataset-selecotr
+# hf-dataset-selector
 [![PyPI version](https://img.shields.io/pypi/v/hf-dataset-selector.svg)](https://pypi.org/project/hf-dataset-selector)
 
 A convenient and fast Python package to find the best datasets for intermediate fine-tuning for your task.
+
+## Why hf-dataset-selector?
+### You don't have enough training data for your problem
+If you don't have a enough training data for your problem, just use hf-dataset-selector to find more.
+You can supplement model training by including publicly available datasets in the training process. 
+First, you fine-tune a language model on suitable intermediate dataset. Then, you fine-tune the resulting model on your target dataset. This workflow is called intermediate task transfer learning. This can significantly improve the target performance.
+But what is a suitable dataset for your problem? hf-dataset-selector enables you to quickly rank thousands of datasets on the Hugging Face Hub by well they are exptected to transfer to your target task. Just specify a base language model and your target dataset and hf-dataset-selector produces a ranking of intermediate datasets.
+
+### You want to find similar datasets to your target dataset
+hf-dataset-selector can be used like search engine on the Hugging Face Hub. You can find similar tasks to your target task without having to rely on heuristics. hf-dataset-selector estimates how language models fine-tuned on each intermediate task would benefinit your target task. This quantitative approach combines the effects of domain similarity and task similarity. 
 
 ## How it works
 hf-dataset-selector enables you to find good datasets from the Hugging Face Hub for intermediate fine-tuning before training on your task. It downloads small (~2.4MB each) neural networks for each intermediate task from the Hugging Face Hub. These neural networks are called Embedding Space Maps (ESMs) and transform embeddings produced by the language model. The transformed embeddings are ranked using LogME.
@@ -10,9 +20,12 @@ hf-dataset-selector only ranks datasets with a corresponding ESM on the Hugging 
 
 
 ### What are Embedding Space Maps?
-<!-- This section describes the evaluation protocols and provides the results. -->
+<img align="right" height="128px" width="128px" src="esm_illustration.png" />
+
 Embedding Space Maps (ESMs) are neural networks that approximate the effect of fine-tuning a language model on a task. They can be used to quickly transform embeddings from a base model to approximate how a fine-tuned model would embed the the input text.
 ESMs can be used for intermediate task selection with the ESM-LogME workflow.
+
+
 
 ## How to install
 
@@ -23,9 +36,9 @@ $ pip install hf-dataset-selector
 ```
 
 
-## How to find suitable datasets for your problem
+## Quickstart
 
-### Example
+### How to find suitable datasets for your problem
 
 ```python
 from hfselect import Dataset, compute_task_ranking
@@ -51,27 +64,41 @@ task_ranking = compute_task_ranking(
 print(task_ranking[:5])
 ```
 
-## How to train your own ESM
-[TBD]
+## Tutorials
+We provide tutorials for finding intermediate datasets, and for training your own ESM for others to rank.
+
+- [Tutorial 1: Rank  intermediate datasets](tutorials/01_find_datasets.ipynb)
+- [Tutorial 2: Filter the pool of intermediate datasets / ESMs](tutorials/02_filter_esms.ipynb)
+- [Tutorial 3: Train your own ESM](tutorials/03_train_esm.ipynb)
+- [# Tutorial 4: Advanced ESM training with hyper-parameter optimization](tutorials/04_advanced_esm_training.ipynb)
 
 ## How to cite
 
 
 <!-- If there is a paper or blog post introducing the model, the APA and Bibtex information for that should go in this section. -->
-If you are using this hf-dataset-selector, please cite our [paper](https://arxiv.org/abs/2410.15148).
+If you are using this hf-dataset-selector, please cite our [paper](https://aclanthology.org/2024.emnlp-main.529/).
 
 **BibTeX:**
 
 
 ```
-@misc{schulte2024moreparameterefficientselectionintermediate,
-      title={Less is More: Parameter-Efficient Selection of Intermediate Tasks for Transfer Learning}, 
-      author={David Schulte and Felix Hamborg and Alan Akbik},
-      year={2024},
-      eprint={2410.15148},
-      archivePrefix={arXiv},
-      primaryClass={cs.CL},
-      url={https://arxiv.org/abs/2410.15148}, 
+@inproceedings{schulte-etal-2024-less,
+    title = "Less is More: Parameter-Efficient Selection of Intermediate Tasks for Transfer Learning",
+    author = "Schulte, David  and
+      Hamborg, Felix  and
+      Akbik, Alan",
+    editor = "Al-Onaizan, Yaser  and
+      Bansal, Mohit  and
+      Chen, Yun-Nung",
+    booktitle = "Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing",
+    month = nov,
+    year = "2024",
+    address = "Miami, Florida, USA",
+    publisher = "Association for Computational Linguistics",
+    url = "https://aclanthology.org/2024.emnlp-main.529/",
+    doi = "10.18653/v1/2024.emnlp-main.529",
+    pages = "9431--9442",
+    abstract = "Intermediate task transfer learning can greatly improve model performance. If, for example, one has little training data for emotion detection, first fine-tuning a language model on a sentiment classification dataset may improve performance strongly. But which task to choose for transfer learning? Prior methods producing useful task rankings are infeasible for large source pools, as they require forward passes through all source language models. We overcome this by introducing Embedding Space Maps (ESMs), light-weight neural networks that approximate the effect of fine-tuning a language model. We conduct the largest study on NLP task transferability and task selection with 12k source-target pairs. We find that applying ESMs on a prior method reduces execution time and disk space usage by factors of 10 and 278, respectively, while retaining high selection performance (avg. regret@5 score of 2.95)."
 }
 ```
 
@@ -79,7 +106,7 @@ If you are using this hf-dataset-selector, please cite our [paper](https://arxiv
 **APA:**
 
 ```
-Schulte, D., Hamborg, F., & Akbik, A. (2024). Less is More: Parameter-Efficient Selection of Intermediate Tasks for Transfer Learning. arXiv preprint arXiv:2410.15148.
+Schulte, D., Hamborg, F., & Akbik, A. (2024, November). Less is More: Parameter-Efficient Selection of Intermediate Tasks for Transfer Learning. In Proceedings of the 2024 Conference on Empirical Methods in Natural Language Processing (pp. 9431-9442).
 ```
 
 ## How to reproduce the results from the paper
