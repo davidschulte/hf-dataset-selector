@@ -193,6 +193,7 @@ class ESMTrainer(Trainer):
             esm_weight_decay=self.weight_decay,
             esm_batch_size=batch_size,
         )
+        self.model.config.update(embedding_dataset.metadata)
 
         if output_filepath:
             output_dir = os.path.dirname(output_filepath)
@@ -252,10 +253,6 @@ class ESMTrainer(Trainer):
             output_filepath=model_output_filepath,
             num_epochs=num_epochs,
             batch_size=train_batch_size,
-        )
-
-        esm.config.update(
-            {**{"base_model_name": base_model.config.name_or_path}, **dataset.metadata}
         )
 
         return esm

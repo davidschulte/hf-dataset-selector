@@ -18,7 +18,7 @@ class InvalidEmbeddingDatasetError(Exception):
 
 class EmbeddingDataset(TorchDataset):
     def __init__(
-        self, x: Union[np.array, List[np.array]], y: Union[np.array, List[np.array]]
+        self, x: Union[np.array, List[np.array]], y: Union[np.array, List[np.array]], metadata: Optional[dict] = None
     ):
         if isinstance(x, list):
             x = np.vstack(x)
@@ -37,20 +37,26 @@ class EmbeddingDataset(TorchDataset):
 
         self.x = x
         self.y = y
+        self.metadata = metadata or {}
         self.embedding_dim = x.shape[1]
         self.num_rows = len(self.x)
 
     @classmethod
     def from_disk(cls, filepath: str):
         embeddings = np.load(filepath)
+        embeddings = np.load(filepath, allow_pickle=True)
         x = embeddings["x"]
         y = embeddings["y"]
+        if "metadata" in embeddings:
+            metadata = embeddings["metadata"].item()
+        else:
+            metadata = None
 
         return EmbeddingDataset(x, y)
 
     def save(self, filepath: str) -> None:
         os.makedirs(os.path.dirname(filepath), exist_ok=True)
-        np.savez(filepath, x=self.x, y=self.y)
+        np.savez(filepath, x=self.x, y=self.y, metadata=np.array(self.metadata))
 
     def __getitem__(self, idx: Union[int, Iterable[int]]):
         if isinstance(idx, int):
@@ -110,7 +116,8 @@ def create_embedding_dataset(
             base_embeddings.append(base_embeddings_batch)
             trained_embeddings.append(trained_embeddings_batch)
 
-        embedding_dataset = EmbeddingDataset(base_embeddings, trained_embeddings)
+        metadata = {**{"base_model_name": base_model.config.name_or_path}, **dataset.metadata}
+        embedding_dataset = EmbeddingDataset(base_embeddings, trained_embeddings, metadata=metadata)
 
         if output_path:
             if os.path.isfile(output_path):
