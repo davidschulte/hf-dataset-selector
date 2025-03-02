@@ -63,14 +63,36 @@ task_ranking = compute_task_ranking(
 # Display top 5 recommendations
 print(task_ranking[:5])
 ```
+```python
+1.   davanstrien/test_imdb_embedd2                     Score: -0.618529
+2.   davanstrien/test_imdb_embedd                      Score: -0.618644
+3.   davanstrien/test1                                 Score: -0.619334
+4.   stanfordnlp/imdb                                  Score: -0.619454
+5.   stanfordnlp/sst                                   Score: -0.62995
+```
 
+|   Rank | Task ID                       | Task Subset     | Text Column   | Label Column   | Task Split   |   Num Examples | ESM Architecture   |     Score |
+|-------:|:------------------------------|:----------------|:--------------|:---------------|:-------------|---------------:|:-------------------|----------:|
+|      1 | davanstrien/test_imdb_embedd2 | default         | text          | label          | train        |          10000 | linear             | -0.618529 |
+|      2 | davanstrien/test_imdb_embedd  | default         | text          | label          | train        |          10000 | linear             | -0.618644 |
+|      3 | davanstrien/test1             | default         | text          | label          | train        |          10000 | linear             | -0.619334 |
+|      4 | stanfordnlp/imdb              | plain_text      | text          | label          | train        |          10000 | linear             | -0.619454 |
+|      5 | stanfordnlp/sst               | dictionary      | phrase        | label          | dictionary   |          10000 | linear             | -0.62995  |
+|      6 | stanfordnlp/sst               | default         | sentence      | label          | train        |           8544 | linear             | -0.63312  |
+|      7 | kuroneko5943/snap21           | CDs_and_Vinyl_5 | sentence      | label          | train        |           6974 | linear             | -0.634365 |
+|      8 | kuroneko5943/snap21           | Video_Games_5   | sentence      | label          | train        |           6997 | linear             | -0.638787 |
+|      9 | kuroneko5943/snap21           | Movies_and_TV_5 | sentence      | label          | train        |           6989 | linear             | -0.639068 |
+|     10 | fancyzhx/amazon_polarity      | amazon_polarity | content       | label          | train        |          10000 | linear             | -0.639718 |
 ## Tutorials
 We provide tutorials for finding intermediate datasets, and for training your own ESM for others to rank.
 
 - [Tutorial 1: Rank  intermediate datasets](tutorials/01_find_datasets.ipynb)
 - [Tutorial 2: Filter the pool of intermediate datasets / ESMs](tutorials/02_filter_esms.ipynb)
 - [Tutorial 3: Train your own ESM](tutorials/03_train_esm.ipynb)
-- [# Tutorial 4: Advanced ESM training with hyper-parameter optimization](tutorials/04_advanced_esm_training.ipynb)
+- [Tutorial 4: Advanced ESM training with hyper-parameter optimization](tutorials/04_advanced_esm_training.ipynb)
+
+## Documentation
+We host a documentation on Read the Docs.
 
 ## How to cite
 
