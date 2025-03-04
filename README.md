@@ -7,8 +7,13 @@ A convenient and fast Python package to find the best datasets for intermediate 
 ### You don't have enough training data for your problem
 If you don't have a enough training data for your problem, just use hf-dataset-selector to find more.
 You can supplement model training by including publicly available datasets in the training process. 
-First, you fine-tune a language model on suitable intermediate dataset. Then, you fine-tune the resulting model on your target dataset. This workflow is called intermediate task transfer learning. This can significantly improve the target performance.
-But what is a suitable dataset for your problem? hf-dataset-selector enables you to quickly rank thousands of datasets on the Hugging Face Hub by well they are exptected to transfer to your target task. Just specify a base language model and your target dataset and hf-dataset-selector produces a ranking of intermediate datasets.
+
+1. Fine-tune a language model on suitable intermediate dataset.
+2. Fine-tune the resulting model on your target dataset.
+
+This workflow is called intermediate task transfer learning and it can significantly improve the target performance.
+
+But what is a suitable dataset for your problem? hf-dataset-selector enables you to quickly rank thousands of datasets on the Hugging Face Hub by how well they are exptected to transfer to your target task. Just specify a base language model and your target dataset, and hf-dataset-selector produces a ranking of intermediate datasets.
 
 ### You want to find similar datasets to your target dataset
 hf-dataset-selector can be used like search engine on the Hugging Face Hub. You can find similar tasks to your target task without having to rely on heuristics. hf-dataset-selector estimates how language models fine-tuned on each intermediate task would benefinit your target task. This quantitative approach combines the effects of domain similarity and task similarity. 
@@ -16,7 +21,7 @@ hf-dataset-selector can be used like search engine on the Hugging Face Hub. You 
 ## How it works
 hf-dataset-selector enables you to find good datasets from the Hugging Face Hub for intermediate fine-tuning before training on your task. It downloads small (~2.4MB each) neural networks for each intermediate task from the Hugging Face Hub. These neural networks are called Embedding Space Maps (ESMs) and transform embeddings produced by the language model. The transformed embeddings are ranked using LogME.
 
-hf-dataset-selector only ranks datasets with a corresponding ESM on the Hugging Face Hub. We encourage you to train and publish your own ESMs for your datasets to enable others to rank them.
+hf-dataset-selector ranks only datasets with a corresponding ESM on the Hugging Face Hub. We encourage you to train and publish your own ESMs for your datasets to enable others to rank them.
 
 
 ### What are Embedding Space Maps?
