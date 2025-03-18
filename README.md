@@ -13,22 +13,6 @@ But what is a suitable dataset for your problem? hf-dataset-selector enables you
 ### You want to find similar datasets to your target dataset
 hf-dataset-selector can be used like search engine on the Hugging Face Hub. You can find similar tasks to your target task without having to rely on heuristics. hf-dataset-selector estimates how language models fine-tuned on each intermediate task would benefinit your target task. This quantitative approach combines the effects of domain similarity and task similarity. 
 
-## How it works
-hf-dataset-selector enables you to find good datasets from the Hugging Face Hub for intermediate fine-tuning before training on your task. It downloads small (~2.4MB each) neural networks for each intermediate task from the Hugging Face Hub. These neural networks are called Embedding Space Maps (ESMs) and transform embeddings produced by the language model. The transformed embeddings are ranked using LogME.
-
-hf-dataset-selector only ranks datasets with a corresponding ESM on the Hugging Face Hub. We encourage you to train and publish your own ESMs for your datasets to enable others to rank them.
-
-
-### What are Embedding Space Maps?
-
-Embedding Space Maps (ESMs) are neural networks that approximate the effect of fine-tuning a language model on a task. They can be used to quickly transform embeddings from a base model to approximate how a fine-tuned model would embed the the input text.
-ESMs can be used for intermediate task selection with the ESM-LogME workflow.
-
-<div style="text-align: center;">
-  <img src="esm_illustration.png" width="300" height="300" />
-</div>
-
-
 ## How to install
 
 **hf-dataset-selector** is available on PyPi:
@@ -95,6 +79,22 @@ We provide tutorials for finding intermediate datasets, and for training your ow
 
 ## Documentation
 We host a [documentation on Read the Docs](https://hf-dataset-selector.readthedocs.io/en/latest/).
+
+## How it works
+hf-dataset-selector enables you to find good datasets from the Hugging Face Hub for intermediate fine-tuning before training on your task. It downloads small (~2.4MB each) neural networks for each intermediate task from the Hugging Face Hub. These neural networks are called Embedding Space Maps (ESMs) and transform embeddings produced by the language model. The transformed embeddings are ranked using LogME.
+
+hf-dataset-selector only ranks datasets with a corresponding ESM on the Hugging Face Hub. We encourage you to train and publish your own ESMs for your datasets to enable others to rank them.
+
+
+### What are Embedding Space Maps?
+
+Embedding Space Maps (ESMs) are neural networks that approximate the effect of fine-tuning a language model on a task. They can be used to quickly transform embeddings from a base model to approximate how a fine-tuned model would embed the the input text.
+ESMs can be used for intermediate task selection with the ESM-LogME workflow.
+
+<div style="text-align: center;">
+  <img src="esm_illustration.png" width="300" height="300" />
+</div>
+
 
 ## How to cite
 
