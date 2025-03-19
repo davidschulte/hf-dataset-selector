@@ -8,7 +8,7 @@ from hfselect import logger
 
 
 def find_esm_repo_ids(
-    model_name: Optional[str], filters: Optional[list[str]] = None
+    model_name: Optional[str] = None, filters: Optional[list[str]] = None
 ) -> list[str]:
     """
     Finds all ESM repo IDs for the specified language model name and filters
@@ -25,7 +25,7 @@ def find_esm_repo_ids(
 
 
 def find_esm_model_infos(
-    model_name: Optional[str], filters: Optional[list[str]] = None
+    model_name: Optional[str] = None, filters: Optional[list[str]] = None
 ) -> list[ModelInfo]:
     """
     Finds HF ModelInfos for all ESMs specified by the language model name and filters
