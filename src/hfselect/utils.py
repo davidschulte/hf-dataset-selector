@@ -5,6 +5,7 @@ from collections import defaultdict
 from .esm import ESM, ESMNotInitializedError
 from .esmconfig import ESMConfig, InvalidESMConfigError
 from hfselect import logger
+from collections import Counter
 
 
 def find_esm_repo_ids(
@@ -130,3 +131,28 @@ def fetch_esm_configs(
         logger.debug(errors)
 
     return esm_configs
+
+
+def get_esm_coverage(filters: Optional[list[str]] = None) -> dict[str, int]:
+    """
+    Finds out how many ESMs are available for each base model
+
+    Args:
+        filters: Filters for selecting ESMs (see hf_api.list_models)
+
+    Returns:
+        A dictionary with base model names as keys and the number of available ESMs for them as items
+    """
+    model_infos = find_esm_model_infos(filters=filters)
+    base_model_names = [_get_base_model_from_model_info(info) for info in model_infos]
+
+    return dict(sorted(Counter(base_model_names).items(), key=lambda x: -x[1]))
+
+
+def _get_base_model_from_model_info(info: ModelInfo) -> Optional[str]:
+    base_model_tags = [tag for tag in info.tags if tag.startswith("base_model:finetune:")]
+
+    if len(base_model_tags) == 0:
+        return None
+
+    return base_model_tags[0].split("base_model:finetune:")[-1]

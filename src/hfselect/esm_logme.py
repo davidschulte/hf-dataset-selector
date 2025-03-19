@@ -140,7 +140,8 @@ def compute_task_ranking(
         esms = fetch_esms(esm_repo_ids)
 
     if len(esms) == 0:
-        logger.error("No ESMs matching the search criteria could be found.")
+        logger.error("No ESMs matching the search criteria could be found."
+                     "You can use get_esm_coverage to find out which base models have valid ESMs.")
         raise NoESMsFoundError
 
     bert_model = AutoModel.from_pretrained(model_name)
