@@ -18,8 +18,7 @@ from datetime import datetime
 from torch.utils.data import RandomSampler, DataLoader
 from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
 from .dataset import Dataset
-import warnings
-
+from hfselect import logger
 
 class Trainer(ABC):
     """
@@ -241,7 +240,7 @@ class ESMTrainer(Trainer):
             output_dir = os.path.dirname(output_filepath)
             os.makedirs(output_dir, exist_ok=True)
             if os.path.isfile(output_filepath):
-                warnings.warn(f"Overwriting ESM at path: {output_filepath}")
+                logger.warning(f"Overwriting ESM at path: {output_filepath}")
 
             torch.save(self.model.state_dict(), output_filepath)
             train_info_dict = {

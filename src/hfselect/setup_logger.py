@@ -14,3 +14,5 @@ stream_handler.setLevel(logging.WARNING)
 
 logger.addHandler(file_handler)
 logger.addHandler(stream_handler)
+
+logging.captureWarnings(True)

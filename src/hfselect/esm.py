@@ -5,7 +5,6 @@ from typing import Dict, Optional, Union
 from huggingface_hub import PyTorchModelHubMixin, create_repo, ModelCard, ModelCardData
 import os
 import warnings
-from hfselect import logger
 from .esmconfig import ESMConfig, InvalidESMConfigError
 
 
@@ -136,7 +135,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         elif filepath.endswith(".safetensors"):
             state_dict = load_file(filepath)
         else:
-            logger.warning(
+            warnings.warn(
                 f"Unknown file extension in model filepath: .{filepath.split('.')[-1]}"
             )
             state_dict = load_file(filepath)

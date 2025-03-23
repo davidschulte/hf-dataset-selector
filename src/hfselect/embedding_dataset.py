@@ -8,7 +8,7 @@ from typing import Optional, Union, List, Iterable
 from tqdm.auto import tqdm
 from .model_utils import get_pooled_output
 import torch
-import warnings
+from hfselect import logger
 
 
 class InvalidEmbeddingDatasetError(Exception):
@@ -170,7 +170,7 @@ def create_embedding_dataset(
 
         if output_path:
             if os.path.isfile(output_path):
-                warnings.warn(f"Overwriting embeddings dataset at path: {output_path}")
+                logger.warning(f"Overwriting embeddings dataset at path: {output_path}")
             embedding_dataset.save(output_path)
 
         return embedding_dataset
