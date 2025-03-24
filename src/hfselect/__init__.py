@@ -5,3 +5,4 @@ from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
 from .dataset import Dataset
 from .utils import *
 from .trainers import ESMTrainer
+from .version import __version__

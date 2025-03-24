@@ -26,6 +26,7 @@
 - **ESM embedding dimension:** {{ esm_embedding_dim | default("[More Information Needed]", true)}}
 - **Language(s) (NLP):** {{ language | default("[More Information Needed]", true)}}
 - **License:** Apache-2.0 license
+- **ESM version:** {{ version | default("[More Information Needed]", true)}}
 
 ## Training Details
 

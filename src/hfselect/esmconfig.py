@@ -1,5 +1,6 @@
 from transformers import PretrainedConfig
 from typing import Optional, Any, Union
+from .version import __version__
 
 
 def _format_text_column_names(text_column: Union[str, tuple]):
@@ -54,6 +55,7 @@ class ESMConfig(PretrainedConfig):
         esm_weight_decay: Optional[float] = None,
         esm_optimizer: Optional[str] = None,
         developers: Optional[str] = None,
+        version: Optional[str] = __version__,
         **kwargs,
     ):
         """
