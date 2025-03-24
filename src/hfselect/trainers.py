@@ -160,7 +160,7 @@ class ESMTrainer(Trainer):
         architecture: Optional[
             Union[str, dict[str, Union[str, tuple[str]]]]
         ] = "linear",
-        output_filepath: str = None,
+        output_dir: Optional[str] = None,
         num_epochs: int = 10,
         batch_size: int = 32,
         reset_model: bool = True,
@@ -172,7 +172,7 @@ class ESMTrainer(Trainer):
         Args:
             embedding_dataset: The embeddings of the same dataset embedded by a base model and a fine-tuned model
             architecture: The desired architecture of the ESM
-            output_filepath: If this filepath is specified, the ESM will be saved locally after training
+            output_dir: If a directory is specified, the ESM will be saved locally after training
             num_epochs: The number of epochs for training the ESM
             batch_size: The batch size for training the ESM
             reset_model: If set to False, the same model with be trained further with multiple calls of the function.
@@ -204,13 +204,13 @@ class ESMTrainer(Trainer):
 
         epoch_train_durations = []
         epoch_avg_losses = []
-        start_time = time.time()
         with tqdm(
             range(num_epochs), desc="Training ESM", unit="epoch", disable=verbose < 1
         ) as epoch_pbar:
             for epoch_i in epoch_pbar:
                 self.reset_loss()
 
+                start_time = time.perf_counter()
                 with tqdm(
                     dataloader,
                     desc=f"Training: Epoch {epoch_i} / {num_epochs}",
@@ -225,9 +225,8 @@ class ESMTrainer(Trainer):
                         epoch_pbar.set_postfix(avg_train_loss=avg_train_loss)
                         batch_pbar.set_postfix(avg_train_loss=avg_train_loss)
 
-                end_time = time.time()
+                end_time = time.perf_counter()
                 epoch_train_durations.append(end_time - start_time)
-                start_time = end_time
                 epoch_avg_losses.append(self.avg_loss)
 
         self.model.config = ESMConfig(
@@ -240,13 +239,12 @@ class ESMTrainer(Trainer):
         )
         self.model.config.update(embedding_dataset.metadata)
 
-        if output_filepath:
-            output_dir = os.path.dirname(output_filepath)
-            os.makedirs(output_dir, exist_ok=True)
-            if os.path.isfile(output_filepath):
-                logger.warning(f"Overwriting ESM at path: {output_filepath}")
+        if output_dir:
+            if os.path.isdir(output_dir):
+                logger.warning(f"Overwriting ESM at path: {output_dir}")
 
-            torch.save(self.model.state_dict(), output_filepath)
+            self.model.save_pretrained(output_dir)
+
             train_info_dict = {
                 "training_completed_timestamp": datetime.now().strftime(
                     "%m/%d/%Y, %H:%M:%S"
@@ -260,8 +258,6 @@ class ESMTrainer(Trainer):
             with open(os.path.join(output_dir, "train_info.json"), "w") as f:
                 json.dump(train_info_dict, f)
 
-            print("Saved model.")
-
         return self.model
 
     def train_with_models(
@@ -273,7 +269,7 @@ class ESMTrainer(Trainer):
         architecture: Optional[
             Union[str, dict[str, Union[str, tuple[str]]]]
         ] = "linear",
-        model_output_filepath: Optional[str] = None,
+        model_output_dir: Optional[str] = None,
         embeddings_output_filepath: Optional[str] = None,
         num_epochs: int = 10,
         train_batch_size: int = 32,
@@ -291,8 +287,8 @@ class ESMTrainer(Trainer):
             tuned_model: The fine-tuned language model
             tokenizer: The tokenizer for processing input texts
             architecture: The desired architecture of the ESM
-            model_output_filepath: If this filepath is specified, the ESM will be saved locally after training
-            embeddings_output_filepath: If this filepath is specified, the EmbeddingDataset will be saved locally
+            model_output_dir: If a directory is specified, the ESM will be saved locally after training
+            embeddings_output_filepath: If a filepath is specified, the EmbeddingDataset will be saved locally
             num_epochs: The number of epochs for training the ESM
             train_batch_size: The batch size for training the ESM
             embeddings_batch_size: The batch size for creating the EmbeddingDataset
@@ -316,7 +312,7 @@ class ESMTrainer(Trainer):
         esm = self.train_with_embeddings(
             embedding_dataset=embedding_dataset,
             architecture=architecture,
-            output_filepath=model_output_filepath,
+            output_dir=model_output_dir,
             num_epochs=num_epochs,
             batch_size=train_batch_size,
         )
