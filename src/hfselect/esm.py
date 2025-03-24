@@ -1,6 +1,5 @@
 from pathlib import Path
 import torch
-from safetensors.torch import load_file, save_file
 import torch.nn as nn
 from typing import Dict, Optional, Union, Any
 from huggingface_hub import PyTorchModelHubMixin, create_repo, ModelCard, ModelCardData
@@ -124,52 +123,6 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         )
         card.push_to_hub(repo_id)
 
-    @classmethod
-    def from_disk(
-        cls,
-        filepath: str,
-        device_name: str = "cpu",
-    ) -> "ESM":
-        """
-        Loads an ESM from a local file
-
-        Args:
-            filepath: The filepath to load the ESM from
-            device_name: The device name to load the ESM to. This is only needed for ESMs saved as .pt files.
-
-        Returns:
-            The loaded ESM
-        """
-        if filepath.endswith(".pt"):
-            device = torch.device(device_name)
-            state_dict = torch.load(filepath, map_location=device)
-        elif filepath.endswith(".safetensors"):
-            state_dict = load_file(filepath)
-        else:
-            warnings.warn(
-                f"Unknown file extension in model filepath: .{filepath.split('.')[-1]}"
-            )
-            state_dict = load_file(filepath)
-        esm = ESM()
-        esm.load_state_dict(state_dict)
-
-        esm.convert_legacy_to_new()
-
-        return esm
-
-    def to_disk(self, filepath: str) -> None:
-        """
-        Locally saves the ESM
-
-        Args:
-            filepath: The filepath for saving the ESM
-
-        Returns:
-
-        """
-        self.convert_legacy_to_new()
-        save_file(self.state_dict(), filepath)
-
     def forward(self, x: torch.Tensor) -> torch.Tensor:
         """
         The forward pass of the ESM
@@ -237,3 +190,26 @@ class ESM(nn.Module, PyTorchModelHubMixin):
             return self.config
 
         return ESMConfig(**self.config)
+
+    def save_pretrained(
+        self,
+        save_directory: Union[str, Path],
+        *,
+        config: Optional[Union[dict, "DataclassInstance"]] = None,
+        repo_id: Optional[str] = None,
+        push_to_hub: bool = False,
+        model_card_kwargs: Optional[Dict[str, Any]] = None,
+        **push_to_hub_kwargs,
+    ) -> Optional[str]:
+
+        if self.is_legacy_model:
+            self.convert_legacy_to_new()
+
+        return super().save_pretrained(
+            save_directory=save_directory,
+            config=config or self.config.to_dict(),
+            repo_id=repo_id,
+            push_to_hub=push_to_hub,
+            model_card_kwargs=model_card_kwargs,
+            **push_to_hub_kwargs,
+        )
