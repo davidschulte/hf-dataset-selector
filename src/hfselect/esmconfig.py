@@ -109,6 +109,7 @@ class ESMConfig(PretrainedConfig):
         self.esm_weight_decay = esm_weight_decay
         self.esm_optimizer = esm_optimizer
         self.developers = developers
+        self.version = version
 
     @property
     def is_valid(self) -> bool:
