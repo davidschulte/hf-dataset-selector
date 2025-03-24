@@ -163,6 +163,7 @@ class ESMTrainer(Trainer):
         output_filepath: str = None,
         num_epochs: int = 10,
         batch_size: int = 32,
+        reset_model: bool = True,
         verbose: int = 1,
     ) -> ESM:
         """
@@ -174,12 +175,13 @@ class ESMTrainer(Trainer):
             output_filepath: If this filepath is specified, the ESM will be saved locally after training
             num_epochs: The number of epochs for training the ESM
             batch_size: The batch size for training the ESM
+            reset_model: If set to False, the same model with be trained further with multiple calls of the function.
             verbose: 0 hides everything, 1 shows the complete training of the ESM, and 2 shows the ESM training epochs.
 
         Returns:
             The resulting ESM
         """
-        if self.model is None:
+        if self.model is None or reset_model:
             self.model = self._create_model(
                 architecture=architecture, embedding_dim=embedding_dataset.embedding_dim
             )
@@ -233,6 +235,8 @@ class ESMTrainer(Trainer):
             esm_learning_rate=self.learning_rate,
             esm_weight_decay=self.weight_decay,
             esm_batch_size=batch_size,
+            esm_architecture=architecture,
+            esm_embedding_dim=embedding_dataset.embedding_dim
         )
         self.model.config.update(embedding_dataset.metadata)
 
