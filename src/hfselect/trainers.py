@@ -106,7 +106,7 @@ class ESMTrainer(Trainer):
         model: Optional[nn.Module] = None,
         optimizer: Optional["torch.optim.Optimizer"] = None,
         weight_decay: float = 0.01,
-        learning_rate: float = 0.001,
+        learning_rate: float = 0.01,
         device_name: str = "cpu",
     ):
         """
