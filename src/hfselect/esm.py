@@ -1,10 +1,10 @@
+from pathlib import Path
 import torch
 from safetensors.torch import load_file, save_file
 import torch.nn as nn
-from typing import Dict, Optional, Union
+from typing import Dict, Optional, Union, Any
 from huggingface_hub import PyTorchModelHubMixin, create_repo, ModelCard, ModelCardData
 import os
-import warnings
 from .esmconfig import ESMConfig, InvalidESMConfigError
 
 
@@ -49,24 +49,30 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         super(ESM, self).__init__()
 
         self.config = config or ESMConfig()
-        self.architecture = architecture
-        self.embedding_dim = embedding_dim
-        self.sequential = nn.Sequential(nn.Linear(768, 768))
 
-        if not self.architecture:
+        architecture = architecture or self.config.get("esm_architecture")
+        embedding_dim = embedding_dim or self.config.get("esm_embedding_dim")
+        version = self.config.get("version")
+
+        if not architecture:
             self.model = None
         else:
-            if self.architecture == "linear":
+            if architecture == "linear":
                 if embedding_dim is None:
                     raise ESMNotInitializedError(
                         details_message="Embedding dimension not provided."
                     )
-
-                self.model = nn.Linear(self.embedding_dim, self.embedding_dim)
+                if version == "0.1.0":
+                    self.sequential = nn.Sequential(nn.Linear(embedding_dim, embedding_dim))
+                    self.model = None
+                else:
+                    self.model = nn.Linear(embedding_dim, embedding_dim)
             else:
                 raise NotImplementedError(
                     f"Could not create ESM with custom architecture: {self.architecture}"
                 )
+
+        self.is_legacy_model = self.model is None and hasattr(self, "sequential")
 
     def publish(
         self,
@@ -85,9 +91,14 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         """
         create_repo(repo_id=repo_id, exist_ok=True)
 
-        self.convert_legacy_to_new()
+        if self.is_legacy_model:
+            self.convert_legacy_to_new()
+
         if config is None:
             config = self.config
+
+        if isinstance(config, dict):
+            config = ESMConfig(**config)
 
         if not config.is_valid:
             raise InvalidESMConfigError()
@@ -169,6 +180,10 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         Returns:
             The transformed embeddings
         """
+
+        if self.is_legacy_model:
+            self.convert_legacy_to_new()
+
         if not self.is_initialized:
             raise ESMNotInitializedError()
 
@@ -182,7 +197,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
 
     def convert_legacy_to_new(self) -> None:
         """
-        In the 0.0.1 previous version of the package, the underlying model of the ESM had a different attribute name.
+        In the 0.1.0 previous version of the package, the underlying model of the ESM had a different attribute name.
         To ensure compatibility, this function renames the attribute from sequential to model.
 
         Returns:
@@ -198,19 +213,14 @@ class ESM(nn.Module, PyTorchModelHubMixin):
                 ):
                     self.model = self.model[0]
 
-            if isinstance(self.model, nn.Linear):
-                self.architecture = "linear"
-                self.embedding_dim = self.model.in_features
-
-            else:
-                warnings.warn("Could not determine ESM architecture while loading.")
-
             del self.sequential
+
+        self.is_legacy_model = False
 
     @property
     def is_initialized(self) -> bool:
         """
-        Whether the model initialized or not
+        Whether the model is initialized or not
 
         Returns:
         """
