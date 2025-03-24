@@ -1,11 +1,13 @@
-from torch.utils.data import Dataset as TorchDataset
-import torch
 from functools import partial
+from typing import Optional, Union, List, Tuple
+
+import numpy as np
+import torch
+from torch.utils.data import Dataset as TorchDataset
 from datasets import load_dataset, ClassLabel, IterableDataset
 from datasets import Dataset as HFDataset
 from transformers import PreTrainedTokenizer
-import numpy as np
-from typing import Optional, Union, List, Tuple
+
 
 DATASET_STREAMING_BUFFER_SIZE = 100000
 TEXT_SEPARATOR = " [SEP] "

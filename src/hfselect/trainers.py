@@ -1,24 +1,27 @@
+from typing import Optional, Union
 from abc import ABC, abstractmethod
-from .esm import ESM
-from .esmconfig import ESMConfig
+import os
+from datetime import datetime
+import time
+import json
+
+from tqdm.auto import tqdm
+import torch
+from torch import nn
+from torch.optim import AdamW
+from torch.utils.data import RandomSampler, DataLoader
 from transformers import (
     get_linear_schedule_with_warmup,
     PreTrainedModel,
     PreTrainedTokenizer,
 )
-import torch
-from torch import nn
-from torch.optim import AdamW
-import os
-from typing import Optional, Tuple, Union
-import time
-import json
-from tqdm.auto import tqdm
-from datetime import datetime
-from torch.utils.data import RandomSampler, DataLoader
+
+from .esm import ESM
+from .esmconfig import ESMConfig
 from .embedding_dataset import EmbeddingDataset, create_embedding_dataset
 from .dataset import Dataset
 from hfselect import logger
+
 
 class Trainer(ABC):
     """
@@ -135,7 +138,7 @@ class ESMTrainer(Trainer):
         # Creates a new ESM
         return ESM(architecture=architecture, embedding_dim=embedding_dim)
 
-    def _train_step(self, embeddings_batch: Tuple[torch.Tensor, torch.Tensor]) -> float:
+    def _train_step(self, embeddings_batch: tuple[torch.Tensor, torch.Tensor]) -> float:
         # One train step for one batch
         self.model.train()
 

@@ -1,7 +1,6 @@
 import torch
 from transformers import (
     PreTrainedModel,
-    PreTrainedTokenizer,
     AutoTokenizer,
     BertModel,
     BertConfig,
@@ -15,12 +14,7 @@ from transformers import (
     DistilBertConfig,
     DistilBertForSequenceClassification,
     DistilBertTokenizer,
-    logging,
 )
-# PreTrainedModel, PreTrainedTokenizer, AutoTokenizer, \
-#     BertModel, BertConfig,  BertForSequenceClassification, BertTokenizer, \
-#     RobertaModel, RobertaConfig, RobertaForSequenceClassification, RobertaTokenizer, \
-#     DistilBertModel, DistilBertConfig, DistilBertForSequenceClassification, DistilBertTokenizer, logging
 
 SEQUENCE_CLASSIFICATION_MODEL_ARGS = {
     "output_attentions": False,

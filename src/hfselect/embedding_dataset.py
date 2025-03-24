@@ -1,13 +1,15 @@
-import numpy as np
-from torch.utils.data import Dataset as TorchDataset
-from .dataset import Dataset
-from transformers import PreTrainedModel, PreTrainedTokenizer
-from torch.utils.data import SequentialSampler, DataLoader
-import os
 from typing import Optional, Union, List, Iterable
+import os
+
 from tqdm.auto import tqdm
-from .model_utils import get_pooled_output
+import numpy as np
 import torch
+from torch.utils.data import Dataset as TorchDataset
+from torch.utils.data import SequentialSampler, DataLoader
+from transformers import PreTrainedModel, PreTrainedTokenizer
+
+from .dataset import Dataset
+from .model_utils import get_pooled_output
 from hfselect import logger
 
 

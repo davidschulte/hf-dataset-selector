@@ -1,5 +1,5 @@
-from transformers import PretrainedConfig
 from typing import Optional, Any, Union
+from transformers import PretrainedConfig
 from .version import __version__
 
 

@@ -1,7 +1,9 @@
 from typing import Optional
-import numpy as np
 from collections.abc import Sequence
+
+import numpy as np
 import pandas as pd
+
 from .esmconfig import ESMConfig
 
 

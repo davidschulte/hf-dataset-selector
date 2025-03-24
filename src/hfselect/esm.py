@@ -1,9 +1,11 @@
+from typing import Dict, Optional, Union, Any
 from pathlib import Path
+import os
+
 import torch
 import torch.nn as nn
-from typing import Dict, Optional, Union, Any
 from huggingface_hub import PyTorchModelHubMixin, create_repo, ModelCard, ModelCardData
-import os
+
 from .esmconfig import ESMConfig, InvalidESMConfigError
 
 

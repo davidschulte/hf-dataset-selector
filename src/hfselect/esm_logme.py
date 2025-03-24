@@ -1,18 +1,19 @@
-from torch.utils.data import SequentialSampler, DataLoader
-from .logme import LogME
+from typing import Optional
+from collections import defaultdict
+
+from tqdm.auto import tqdm
 import numpy as np
 import torch
+from torch.utils.data import SequentialSampler, DataLoader
+from transformers import AutoModel, AutoTokenizer, PreTrainedModel, PreTrainedTokenizer
+
+from .logme import LogME
 from .model_utils import get_pooled_output
-from transformers import PreTrainedModel, PreTrainedTokenizer
 from .utils import fetch_esms, find_esm_repo_ids
 from .dataset import Dataset
 from .task_ranking import TaskRanking
-from tqdm.auto import tqdm
-from typing import List, Optional
-from collections import defaultdict
-from transformers import AutoModel, AutoTokenizer
-from hfselect import logger
 from .esm import ESM
+from hfselect import logger
 
 
 class NoESMsFoundError(Exception):
@@ -23,7 +24,7 @@ class NoESMsFoundError(Exception):
 def compute_scores(
     dataset: Dataset,
     base_model: PreTrainedModel,
-    esms: List[ESM],
+    esms: list[ESM],
     tokenizer: PreTrainedTokenizer,
     batch_size: int = 128,
     device_name: str = "cpu",
@@ -113,8 +114,8 @@ def compute_scores(
 def compute_task_ranking(
     dataset: Dataset,
     model_name: str,
-    esms: Optional[List[ESM]] = None,
-    esm_repo_ids: Optional[List[str]] = None,
+    esms: Optional[list[ESM]] = None,
+    esm_repo_ids: Optional[list[str]] = None,
     batch_size: int = 128,
     device_name: str = "cpu",
 ) -> TaskRanking:
