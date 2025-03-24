@@ -75,7 +75,6 @@ def fetch_esms(
         for repo_id in pbar:
             try:
                 esm = ESM.from_pretrained(repo_id)
-                esm.convert_legacy_to_new()
 
                 if not esm.is_initialized:
                     raise ESMNotInitializedError
