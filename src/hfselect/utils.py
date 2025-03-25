@@ -150,7 +150,9 @@ def get_esm_coverage(filters: Optional[list[str]] = None) -> dict[str, int]:
 
 
 def _get_base_model_from_model_info(info: ModelInfo) -> Optional[str]:
-    base_model_tags = [tag for tag in info.tags if tag.startswith("base_model:finetune:")]
+    base_model_tags = [
+        tag for tag in info.tags if tag.startswith("base_model:finetune:")
+    ]
 
     if len(base_model_tags) == 0:
         return None

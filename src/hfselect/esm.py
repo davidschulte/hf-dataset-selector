@@ -14,9 +14,7 @@ class ESMNotInitializedError(Exception):
     This error is raised when a forward pass of the ESM is triggered before properly defining its architecture.
     """
 
-    custom_message = (
-        "ESM was not initialized correctly. Define the ESM architecture before using it for training or inference."
-    )
+    custom_message = "ESM was not initialized correctly. Define the ESM architecture before using it for training or inference."
 
     def __init__(self, details_message: Optional[str] = None):
         super().__init__(
@@ -32,6 +30,7 @@ class ESM(nn.Module, PyTorchModelHubMixin):
     on the embedding space. It works similarly to an adapter that can be placed on top of the base language model /
     applied to the embeddings of computed by the base language model.
     """
+
     def __init__(
         self,
         architecture: Optional[Union[str, dict[str, Union[str, tuple[str]]]]] = None,
@@ -64,7 +63,9 @@ class ESM(nn.Module, PyTorchModelHubMixin):
                         details_message="Embedding dimension not provided."
                     )
                 if version == "0.1.0":
-                    self.sequential = nn.Sequential(nn.Linear(embedding_dim, embedding_dim))
+                    self.sequential = nn.Sequential(
+                        nn.Linear(embedding_dim, embedding_dim)
+                    )
                     self.model = None
                 else:
                     self.model = nn.Linear(embedding_dim, embedding_dim)
@@ -203,7 +204,6 @@ class ESM(nn.Module, PyTorchModelHubMixin):
         model_card_kwargs: Optional[Dict[str, Any]] = None,
         **push_to_hub_kwargs,
     ) -> Optional[str]:
-
         if self.is_legacy_model:
             self.convert_legacy_to_new()
 

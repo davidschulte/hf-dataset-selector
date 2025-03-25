@@ -22,6 +22,7 @@ class TaskRanking(Sequence):
     """
     A task ranking contains the esm configs of ranked ESMS, their scores and their ranks
     """
+
     def __init__(
         self,
         esm_configs: list[ESMConfig],

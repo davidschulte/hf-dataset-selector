@@ -31,6 +31,7 @@ class ESMConfig(PretrainedConfig):
     """
     ESMConfig is a config for an ESM. It contains metadata that is parsed to the model card when uploaded to HF.
     """
+
     def __init__(
         self,
         base_model_name: Optional[str] = None,

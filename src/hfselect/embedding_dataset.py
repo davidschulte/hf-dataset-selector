@@ -28,8 +28,12 @@ class EmbeddingDataset(TorchDataset):
     A dataset embedded using a base model and the same dataset embedded by a fine-tuned model.
     It can be used to train an ESM on the transformation of the embedding space caused by fine-tuning the model.
     """
+
     def __init__(
-        self, x: Union[np.array, List[np.array]], y: Union[np.array, List[np.array]], metadata: Optional[dict] = None
+        self,
+        x: Union[np.array, List[np.array]],
+        y: Union[np.array, List[np.array]],
+        metadata: Optional[dict] = None,
     ):
         """
         Creates an embedding dataset from two sets of embeddings
@@ -167,8 +171,13 @@ def create_embedding_dataset(
             base_embeddings.append(base_embeddings_batch)
             trained_embeddings.append(trained_embeddings_batch)
 
-        metadata = {**{"base_model_name": base_model.config.name_or_path}, **dataset.metadata}
-        embedding_dataset = EmbeddingDataset(base_embeddings, trained_embeddings, metadata=metadata)
+        metadata = {
+            **{"base_model_name": base_model.config.name_or_path},
+            **dataset.metadata,
+        }
+        embedding_dataset = EmbeddingDataset(
+            base_embeddings, trained_embeddings, metadata=metadata
+        )
 
         if output_path:
             if os.path.isfile(output_path):

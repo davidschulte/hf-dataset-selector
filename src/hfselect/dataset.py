@@ -17,6 +17,7 @@ class EmptyDatasetError(Exception):
     """
     EmptyDatasetError are raised when a dataset is empty (possibly after filtering).
     """
+
     default_message = "The dataset is empty."
 
     def __init__(self, message: Optional[str] = None):
@@ -38,6 +39,7 @@ class Dataset(TorchDataset):
     """
     This custom dataset contains an internal dataset, metadata and instructions about processing the data
     """
+
     def __init__(
         self,
         dataset: Union[HFDataset, IterableDataset],

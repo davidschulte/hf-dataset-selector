@@ -27,6 +27,7 @@ class Trainer(ABC):
     """
     A abstract trainer class
     """
+
     def __init__(
         self,
         model: Optional[nn.Module] = None,
@@ -101,6 +102,7 @@ class ESMTrainer(Trainer):
     """
     A trainer class that fabricates ESMs
     """
+
     def __init__(
         self,
         model: Optional[nn.Module] = None,
@@ -238,7 +240,7 @@ class ESMTrainer(Trainer):
             esm_weight_decay=self.weight_decay,
             esm_batch_size=batch_size,
             esm_architecture=architecture,
-            esm_embedding_dim=embedding_dataset.embedding_dim
+            esm_embedding_dim=embedding_dataset.embedding_dim,
         )
         self.model.config.update(embedding_dataset.metadata)
 
