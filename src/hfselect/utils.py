@@ -77,6 +77,9 @@ def fetch_esms(
             try:
                 esm = ESM.from_pretrained(repo_id)
 
+                if esm.is_legacy_model:
+                    esm.convert_legacy_to_new()
+
                 if not esm.is_initialized:
                     raise ESMNotInitializedError
 
