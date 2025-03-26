@@ -52,6 +52,8 @@ def compute_scores(
     )
     device = torch.device(device_name)
     base_model.to(device)
+    for esm in esms:
+        esm.to(device)
 
     regression = dataset.is_regression
     if regression:
