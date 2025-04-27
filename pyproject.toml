@@ -9,7 +9,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "hf-dataset-selector"
-version = "0.2.0"
+version = "0.2.1"
 description = "A convenient and fast Python package to find the best datasets for intermediate fine-tuning for your task."
 authors = [{name = "David Schulte", email = "davidsiriusschulte@gmail.com"}]
 readme = "README.md"
