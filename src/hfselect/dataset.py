@@ -104,6 +104,7 @@ class Dataset(TorchDataset):
         num_examples: Optional[int] = None,
         seed: Optional[int] = None,
         streaming: bool = False,
+        trust_remote_code: Optional[bool] = None,
     ) -> "Dataset":
         """
         Loads an underlying HF dataset and creates the dataset wrapper class around it
@@ -118,14 +119,27 @@ class Dataset(TorchDataset):
             num_examples: Number of tutorials to sample. If this is None, the whole dataset is used.
             seed: The random state for sampling tutorials
             streaming: Whether to use the option for streaming datasets from HF
+            trust_remote_code: Trust remote code for HF datasets. If set to None, the local config of the datasets \
+                                package is used. By default, this results in a False value.
 
         Returns:
             A dataset class with the specified underlying HF dataset
         """
         if subset is None:
-            dataset = load_dataset(name, split=split, streaming=streaming)
+            dataset = load_dataset(
+                name,
+                split=split,
+                streaming=streaming,
+                trust_remote_code=trust_remote_code,
+            )
         else:
-            dataset = load_dataset(name, subset, split=split, streaming=streaming)
+            dataset = load_dataset(
+                name,
+                subset,
+                split=split,
+                streaming=streaming,
+                trust_remote_code=trust_remote_code,
+            )
 
         cols_to_keep = (
             text_col + [label_col]
